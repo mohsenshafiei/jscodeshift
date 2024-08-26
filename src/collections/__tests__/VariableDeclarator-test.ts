@@ -7,25 +7,29 @@
 
 "use strict";
 
-import getParser from "./../../getParser";
-
-import recast from "recast";
-const types = recast.types.namedTypes;
+import * as recast from "recast";
+import { parse } from "recast";
+import * as CollectionModule from "../../Collection";
+import * as VariableDeclarator from "../VariableDeclarator";
+import getParser from "../../getParser";
 
 describe("VariableDeclarators", function () {
+  let types: any;
   let nodes: any;
   let Collection: any;
   let VariableDeclaratorCollection: any;
+  let CPt: any;
 
-  beforeEach(function () {
-    jest.resetModules();
+  beforeEach(async function () {
+    Collection = CollectionModule;
+    CPt = CollectionModule.CPt;
+    VariableDeclaratorCollection = VariableDeclarator;
+    types = recast.types.namedTypes;
 
-    Collection = require("../../Collection");
-    VariableDeclaratorCollection = require("../VariableDeclarator");
     VariableDeclaratorCollection.register();
 
     nodes = [
-      recast.parse(
+      parse(
         [
           "var foo = 42;",
           'var bar = require("module");',
@@ -56,7 +60,7 @@ describe("VariableDeclarators", function () {
           "class Foo { @decorator\n*stuff() {} }",
           "<Component foo={foo} />",
         ].join("\n"),
-        { parser: getParser() }
+        { parser: await getParser() }
       ).program,
     ];
   });
@@ -136,12 +140,11 @@ describe("VariableDeclarators", function () {
       expect(identifiers.length).toBe(1);
     });
 
-    it("properly renames a shorthand property that was using the old variable name", function () {
+    it("properly renames a shorthand property that was using the old variable name", async function () {
       nodes = [
-        recast.parse(
-          ["var foo = 42;", "var obj2 = {", "  foo,", "};"].join("\n"),
-          { parser: getParser() }
-        ).program,
+        parse(["var foo = 42;", "var obj2 = {", "  foo,", "};"].join("\n"), {
+          parser: await getParser(),
+        }).program,
       ];
 
       // Outputs:
@@ -188,10 +191,10 @@ describe("VariableDeclarators", function () {
     });
 
     describe("parsing with bablylon", function () {
-      it("does not rename object property", function () {
+      it("does not rename object property", async function () {
         nodes = [
-          recast.parse("var foo = 42; var obj = { foo: null };", {
-            parser: getParser("babylon"),
+          parse("var foo = 42; var obj = { foo: null };", {
+            parser: await getParser("babylon"),
           }).program,
         ];
         Collection.fromNodes(nodes)
@@ -208,10 +211,10 @@ describe("VariableDeclarators", function () {
         ).toBe(1);
       });
 
-      it("does not rename object method", function () {
+      it("does not rename object method", async function () {
         nodes = [
-          recast.parse("var foo = 42; var obj = { foo() {} };", {
-            parser: getParser("babylon"),
+          parse("var foo = 42; var obj = { foo() {} };", {
+            parser: await getParser("babylon"),
           }).program,
         ];
         Collection.fromNodes(nodes)
@@ -228,10 +231,10 @@ describe("VariableDeclarators", function () {
         ).toBe(1);
       });
 
-      it("does not rename class method", function () {
+      it("does not rename class method", async function () {
         nodes = [
-          recast.parse("var foo = 42; class A { foo() {} }", {
-            parser: getParser("babylon"),
+          parse("var foo = 42; class A { foo() {} }", {
+            parser: await getParser("babylon"),
           }).program,
         ];
         Collection.fromNodes(nodes)

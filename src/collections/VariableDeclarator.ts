@@ -10,13 +10,23 @@
 import * as Collection from "../Collection";
 import * as NodeCollection from "./Node";
 import once from "../utils/once";
-import recast from "recast";
+import * as recast from "recast";
 
 const astNodesAreEquivalent = recast.types.astNodesAreEquivalent;
 const b = recast.types.builders;
 var types = recast.types.namedTypes;
 
 const VariableDeclarator = recast.types.namedTypes.VariableDeclarator;
+
+// Types
+type ASTNode = recast.types.namedTypes.Node;
+interface NodePath<N = ASTNode, V = any> {
+  node: N;
+  value: V;
+  scope: any;
+  parent: any;
+  get(...fields: (string | number)[]): any;
+}
 
 /**
  * @mixin
@@ -28,7 +38,7 @@ const globalMethods = {
    * @param {string} name
    * @return {Collection}
    */
-  findVariableDeclarators: function (name: any): any {
+  findVariableDeclarators: function (name: string): Collection.CollectionType {
     const filter = name ? { id: { name: name } } : null;
     // @ts-ignore
     return this.find(VariableDeclarator, filter);
@@ -43,12 +53,12 @@ const filterMethods = {
    * @param {string|Array} names A module name or an array of module names
    * @return {Function}
    */
-  requiresModule: function (names: any) {
+  requiresModule: function (names: string[]) {
     if (names && !Array.isArray(names)) {
       names = [names];
     }
     const requireIdentifier = b.identifier("require");
-    return function (path: any) {
+    return function (path: NodePath) {
       const node = path.value;
       if (
         !VariableDeclarator.check(node) ||
@@ -59,7 +69,7 @@ const filterMethods = {
       }
       return (
         !names ||
-        names.some((n: any) =>
+        names.some((n: string) =>
           // @ts-ignore
           astNodesAreEquivalent(node.init.arguments[0], b.literal(n))
         )
@@ -78,10 +88,10 @@ const transformMethods = {
    * @param {string} newName
    * @return {Collection}
    */
-  renameTo: function (newName: any): any {
+  renameTo: function (newName: string): any {
     // TODO: Include JSXElements
     // @ts-ignore
-    return this.forEach(function (path: any) {
+    return this.forEach(function (path: NodePath) {
       const node = path.value;
       const oldName = node.id.name;
       const rootScope = path.scope;
@@ -89,7 +99,7 @@ const transformMethods = {
       Collection.fromPaths([rootPath])
         // @ts-ignore
         .find(types.Identifier, { name: oldName })
-        .filter(function (path: any) {
+        .filter(function (path: NodePath) {
           // ignore non-variables
           const parent = path.parent.node;
 
@@ -168,7 +178,7 @@ const transformMethods = {
 
           return true;
         })
-        .forEach(function (path: any) {
+        .forEach(function (path: NodePath) {
           let scope = path.scope;
           while (scope && scope !== rootScope) {
             if (scope.declares(oldName)) {
