@@ -9,3 +9,7 @@
 .module-cache
 __tests__
 yarn.lock
+
+*.ts
+!*.d.ts
+/types

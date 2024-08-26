@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,13 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const fs = require('fs');
-const path = require('path');
-const temp = require('temp');
+import fs from "fs";
+import path from "path";
+import temp from "temp";
 
-function renameFileTo(oldPath, newFilename, extension = '') {
+function renameFileTo(
+  oldPath: string,
+  newFilename: string,
+  extension: string = ""
+): string {
   const projectPath = path.dirname(oldPath);
   const newPath = path.join(projectPath, newFilename + extension);
   fs.mkdirSync(path.dirname(newPath), { recursive: true });
@@ -20,7 +23,11 @@ function renameFileTo(oldPath, newFilename, extension = '') {
   return newPath;
 }
 
-function createTempFileWith(content, filename, extension) {
+function createTempFileWith(
+  content: string,
+  filename: string | undefined,
+  extension: string
+) {
   const info = temp.openSync({ suffix: extension });
   let filePath = info.path;
   fs.writeSync(info.fd, content);
@@ -34,16 +41,16 @@ exports.createTempFileWith = createTempFileWith;
 
 // Test transform files need a js extension to work with @babel/register
 // .ts or .tsx work as well
-function createTransformWith(content, ext='.js') {
+function createTransformWith(content: string, ext = ".js") {
   return createTempFileWith(
-    'module.exports = function(fileInfo, api, options) { ' + content + ' }',
+    "module.exports = function(fileInfo, api, options) { " + content + " }",
     undefined,
     ext
   );
 }
 exports.createTransformWith = createTransformWith;
 
-function getFileContent(filePath) {
+function getFileContent(filePath: string) {
   return fs.readFileSync(filePath).toString();
 }
 exports.getFileContent = getFileContent;
