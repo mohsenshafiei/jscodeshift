@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,14 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-const Collection = require('./Collection');
+"use strict";
 
-const collections = require('./collections');
-const getParser = require('./getParser');
-const matchNode = require('./matchNode');
-const recast = require('recast');
-const template = require('./template');
+import * as Collection from "./Collection";
+
+// @ts-ignore
+import collections from "./collections";
+import getParser from "./getParser";
+import { matchNode } from "./matchNode";
+import recast from "recast";
+import * as template from "./template";
 
 const Node = recast.types.namedTypes.Node;
 const NodePath = recast.types.NodePath;
@@ -39,10 +40,10 @@ for (var name in collections) {
  * @param {Object} options Options to pass to Recast when passing source code
  * @return {Collection}
  */
-function core(source, options) {
-  return typeof source === 'string' ?
-    fromSource(source, options) :
-    fromAST(source);
+function core(source: any, options: any) {
+  return typeof source === "string"
+    ? fromSource(source, options)
+    : fromAST(source);
 }
 
 /**
@@ -53,7 +54,7 @@ function core(source, options) {
  * @param {Node|NodePath|Array} source
  * @return {Collection}
  */
-function fromAST(ast) {
+function fromAST(ast: any) {
   if (Array.isArray(ast)) {
     if (ast[0] instanceof NodePath || ast.length === 0) {
       return Collection.fromPaths(ast);
@@ -68,11 +69,11 @@ function fromAST(ast) {
     }
   }
   throw new TypeError(
-    'Received an unexpected value ' + Object.prototype.toString.call(ast)
+    "Received an unexpected value " + Object.prototype.toString.call(ast)
   );
 }
 
-function fromSource(source, options) {
+function fromSource(source: any, options: any) {
   if (!options) {
     options = {};
   }
@@ -90,18 +91,18 @@ function fromSource(source, options) {
  * @parma {Object} filter
  * @return boolean
  */
-function match(path, filter) {
+function match(path: any, filter: any) {
   if (!(path instanceof NodePath)) {
-    if (typeof path.get === 'function') {
+    if (typeof path.get === "function") {
       path = path.get();
     } else {
-      path = {value: path};
+      path = { value: path };
     }
   }
   return matchNode(path.value, filter);
 }
 
-const plugins = [];
+const plugins: any = [];
 
 /**
  * Utility function for registering plugins.
@@ -114,7 +115,7 @@ const plugins = [];
  * @static
  * @param {Function} plugin
  */
-function use(plugin) {
+function use(plugin: any) {
   if (plugins.indexOf(plugin) === -1) {
     plugins.push(plugin);
     plugin(core);
@@ -128,16 +129,16 @@ function use(plugin) {
  * @augments core
  * @static
  */
-function withParser(parser) {
-  if (typeof parser === 'string') {
+export function withParser(parser: any) {
+  if (typeof parser === "string") {
     parser = getParser(parser);
   }
 
-  const newCore = function(source, options) {
+  const newCore = function (source: any, options: any) {
     if (options && !options.parser) {
       options.parser = parser;
     } else {
-      options = {parser};
+      options = { parser };
     }
     return core(source, options);
   };
@@ -146,23 +147,23 @@ function withParser(parser) {
 }
 
 /**
-* The ast-types library
-* @external astTypes
-* @see {@link https://github.com/benjamn/ast-types}
-*/
+ * The ast-types library
+ * @external astTypes
+ * @see {@link https://github.com/benjamn/ast-types}
+ */
 
-function enrichCore(core, parser) {
+function enrichCore(core: any, parser: any) {
   // add builders and types to the function for simple access
   Object.assign(core, recast.types.namedTypes);
   Object.assign(core, recast.types.builders);
   core.registerMethods = Collection.registerMethods;
   /**
-  * @augments core
-  * @type external:astTypes
-  */
+   * @augments core
+   * @type external:astTypes
+   */
   core.types = recast.types;
   core.match = match;
-  core.template = template(parser);
+  core.template = template.withParser(parser);
 
   // add mappings and filters to function
   core.filters = {};
@@ -180,4 +181,4 @@ function enrichCore(core, parser) {
   return core;
 }
 
-module.exports = enrichCore(core, getParser());
+export default enrichCore(core, getParser());

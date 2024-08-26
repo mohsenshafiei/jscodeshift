@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,78 +5,90 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const EventEmitter = require('events').EventEmitter;
+const EventEmitter = require("events").EventEmitter;
 
-const async = require('neo-async');
-const fs = require('graceful-fs');
-const writeFileAtomic = require('write-file-atomic');
-const { DEFAULT_EXTENSIONS } = require('@babel/core');
-const getParser = require('./getParser');
+import async from "neo-async";
+import fs from "graceful-fs";
+import writeFileAtomic from "write-file-atomic";
+import { DEFAULT_EXTENSIONS } from "@babel/core";
+import getParser from "./getParser";
+import * as jscodeshift from "./core";
 
-const jscodeshift = require('./core');
+let presetEnv: typeof import("@babel/preset-env");
+async function loadPresetEnv(): Promise<void> {
+  try {
+    presetEnv = await import("@babel/preset-env");
+  } catch (error) {
+    console.error("Failed to load @babel/preset-env:", error);
+  }
+}
+loadPresetEnv();
 
-let presetEnv;
-try {
-  presetEnv = require('@babel/preset-env');
-} catch (_) {}
-
-let emitter;
-let finish;
-let notify;
-let transform;
-let parserFromTransform;
+let emitter: any;
+let finish: any;
+let notify: any;
+let transform: any;
+let parserFromTransform: any;
 
 if (module.parent) {
   emitter = new EventEmitter();
-  emitter.send = (data) => { run(data); };
-  finish = () => { emitter.emit('disconnect'); };
-  notify = (data) => { emitter.emit('message', data); };
-  module.exports = (args) => {
+  emitter.send = (data: any) => {
+    run(data);
+  };
+  finish = () => {
+    emitter.emit("disconnect");
+  };
+  notify = (data: any) => {
+    emitter.emit("message", data);
+  };
+  module.exports = (args: any) => {
     setup(args[0], args[1]);
     return emitter;
   };
 } else {
   finish = () => setImmediate(() => process.disconnect());
-  notify = (data) => { process.send(data); };
-  process.on('message', (data) => { run(data); });
+  notify = (data: any) => {
+    process.send && process.send(data);
+  };
+  process.on("message", (data) => {
+    run(data);
+  });
   setup(process.argv[2], process.argv[3]);
 }
 
-function prepareJscodeshift(options) {
-  const parser = parserFromTransform ||
-    getParser(options.parser, options.parserConfig);
+function prepareJscodeshift(options: any) {
+  const parser =
+    parserFromTransform || getParser(options.parser, options.parserConfig);
   return jscodeshift.withParser(parser);
 }
 
-function setup(tr, babel) {
-  if (babel === 'babel') {
+function setup(tr: any, babel: any) {
+  if (babel === "babel") {
     const presets = [];
     if (presetEnv) {
-      presets.push([
-        presetEnv.default,
-        {targets: {node: true}},
-      ]);
+      // @ts-ignore
+      presets.push([presetEnv.default, { targets: { node: true } }]);
     }
     presets.push(
-      /\.tsx?$/.test(tr) ?
-        require('@babel/preset-typescript').default :
-        require('@babel/preset-flow').default
+      /\.tsx?$/.test(tr)
+        ? require("@babel/preset-typescript").default
+        : require("@babel/preset-flow").default
     );
 
-    require('@babel/register')({
+    require("@babel/register")({
       configFile: false,
       babelrc: false,
       presets,
       plugins: [
-        require('@babel/plugin-transform-class-properties').default,
-        require('@babel/plugin-transform-nullish-coalescing-operator').default,
-        require('@babel/plugin-transform-optional-chaining').default,
-        require('@babel/plugin-transform-modules-commonjs').default,
-        require('@babel/plugin-transform-private-methods').default,
+        require("@babel/plugin-transform-class-properties").default,
+        require("@babel/plugin-transform-nullish-coalescing-operator").default,
+        require("@babel/plugin-transform-optional-chaining").default,
+        require("@babel/plugin-transform-modules-commonjs").default,
+        require("@babel/plugin-transform-private-methods").default,
       ],
-      extensions: [...DEFAULT_EXTENSIONS, '.ts', '.tsx'],
+      extensions: [...DEFAULT_EXTENSIONS, ".ts", ".tsx"],
       // By default, babel register only compiles things inside the current working directory.
       // https://github.com/babel/babel/blob/2a4f16236656178e84b05b8915aab9261c55782c/packages/babel-register/src/node.js#L140-L157
       ignore: [
@@ -91,53 +102,52 @@ function setup(tr, babel) {
   }
 
   const module = require(tr);
-  transform = typeof module.default === 'function' ?
-    module.default :
-    module;
+  transform = typeof module.default === "function" ? module.default : module;
   if (module.parser) {
-    parserFromTransform = typeof module.parser === 'string' ?
-      getParser(module.parser) :
-      module.parser;
+    parserFromTransform =
+      typeof module.parser === "string"
+        ? getParser(module.parser)
+        : module.parser;
   }
 }
 
 function free() {
-  notify({action: 'free'});
+  notify({ action: "free" });
 }
 
-function updateStatus(status, file, msg) {
-  msg = msg ? file + ' ' + msg : file;
-  notify({action: 'status', status: status, msg: msg});
+function updateStatus(status: any, file: any, msg?: any): any {
+  msg = msg ? file + " " + msg : file;
+  notify({ action: "status", status: status, msg: msg });
 }
 
-function report(file, msg) {
-  notify({action: 'report', file, msg});
+function report(file: any, msg: any) {
+  notify({ action: "report", file, msg });
 }
 
 function empty() {}
 
-function stats(name, quantity) {
-  quantity = typeof quantity !== 'number' ? 1 : quantity;
-  notify({action: 'update', name: name, quantity: quantity});
+function stats(name: any, quantity: any) {
+  quantity = typeof quantity !== "number" ? 1 : quantity;
+  notify({ action: "update", name: name, quantity: quantity });
 }
 
-function trimStackTrace(trace) {
+function trimStackTrace(trace: any) {
   if (!trace) {
-    return '';
+    return "";
   }
   // Remove this file from the stack trace of an error thrown in the transformer
-  const lines = trace.split('\n');
-  const result = [];
-  lines.every(function(line) {
+  const lines = trace.split("\n");
+  const result: any = [];
+  lines.every(function (line: any) {
     if (line.indexOf(__filename) === -1) {
       result.push(line);
       return true;
     }
   });
-  return result.join('\n');
+  return result.join("\n");
 }
 
-function run(data) {
+function run(data: any) {
   const files = data.files;
   const options = data.options || {};
   if (!files.length) {
@@ -146,10 +156,10 @@ function run(data) {
   }
   async.each(
     files,
-    function(file, callback) {
-      fs.readFile(file, async function(err, source) {
+    function (file: any, callback) {
+      fs.readFile(file, async function (err: any, source: any) {
         if (err) {
-          updateStatus('error', file, 'File error: ' + err);
+          updateStatus("error", file, "File error: " + err);
           callback();
           return;
         }
@@ -165,12 +175,12 @@ function run(data) {
               j: jscodeshift,
               jscodeshift: jscodeshift,
               stats: options.dry ? stats : empty,
-              report: msg => report(file, msg),
+              report: (msg: any) => report(file, msg),
             },
             options
           );
           if (!out || out === source) {
-            updateStatus(out ? 'nochange' : 'skip', file);
+            updateStatus(out ? "nochange" : "skip", file);
             callback();
             return;
           }
@@ -178,31 +188,34 @@ function run(data) {
             console.log(out); // eslint-disable-line no-console
           }
           if (!options.dry) {
-            writeFileAtomic(file, out, function(err) {
+            writeFileAtomic(file, out, function (err) {
               if (err) {
-                updateStatus('error', file, 'File writer error: ' + err);
+                updateStatus("error", file, "File writer error: " + err);
               } else {
-                updateStatus('ok', file);
+                updateStatus("ok", file);
               }
               callback();
             });
           } else {
-            updateStatus('ok', file);
+            updateStatus("ok", file);
             callback();
           }
-        } catch(err) {
+        } catch (err: any) {
           updateStatus(
-            'error',
+            "error",
             file,
-            'Transformation error ('+ err.message.replace(/\n/g, ' ') + ')\n' + trimStackTrace(err.stack)
+            "Transformation error (" +
+              err.message.replace(/\n/g, " ") +
+              ")\n" +
+              trimStackTrace(err.stack)
           );
           callback();
         }
       });
     },
-    function(err) {
+    function (err) {
       if (err) {
-        updateStatus('error', '', 'This should never be shown!');
+        updateStatus("error", "", "This should never be shown!");
       }
       free();
     }

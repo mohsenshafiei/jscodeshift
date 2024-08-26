@@ -5,30 +5,33 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const union = require('../union');
+import union from "../union";
 
-function test(testCases) {
+function test(testCases: any) {
   for (const testName in testCases) {
     const testCase = testCases[testName];
-    it(testName, function() {
+    it(testName, function () {
       expect(union(testCase.input)).toEqual(testCase.output);
     });
   }
 }
 
-describe('union', function() {
+describe("union", function () {
   test({
-    'unions string values': {
-      input: [['foo', 'bar', 'baz'], ['foo', 'bar'], ['bar', 'baz']],
-      output: ['foo', 'bar', 'baz'],
+    "unions string values": {
+      input: [
+        ["foo", "bar", "baz"],
+        ["foo", "bar"],
+        ["bar", "baz"],
+      ],
+      output: ["foo", "bar", "baz"],
     },
 
-    'understands empty input arrays': {
-      input: [[], ['foo'], ['bar']],
-      output: ['foo', 'bar'],
+    "understands empty input arrays": {
+      input: [[], ["foo"], ["bar"]],
+      output: ["foo", "bar"],
     },
   });
 });
-

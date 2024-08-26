@@ -7,22 +7,22 @@
 
 /*global jest, describe, it, expect, beforeEach*/
 
-'use strict';
+"use strict";
 
-const matchNode = require('../matchNode');
+import { matchNode } from "../matchNode";
 
-describe('matchNode', function() {
-  beforeEach(function() {
+describe("matchNode", function () {
+  beforeEach(function () {
     expect.extend({
-      toMatchNode: function(haystack, needle) {
-        const result = {};
+      toMatchNode: function (haystack: any, needle: any): any {
+        const result: any = {};
         result.pass = matchNode(haystack, needle);
         return result;
-      }
+      },
     });
-  })
+  });
 
-  it('matches null and undefined', function() {
+  it("matches null and undefined", function () {
     expect(null).toMatchNode(null);
     expect(null).not.toMatchNode(undefined);
 
@@ -30,51 +30,55 @@ describe('matchNode', function() {
     expect(undefined).not.toMatchNode(null);
   });
 
-  it('matches scalars', function() {
-    expect('foo').toMatchNode('foo');
-    expect('foo').not.toMatchNode('bar');
-    expect('123').not.toMatchNode(123);
+  it("matches scalars", function () {
+    expect("foo").toMatchNode("foo");
+    expect("foo").not.toMatchNode("bar");
+    expect("123").not.toMatchNode(123);
 
     expect(123).toMatchNode(123);
     expect(123).not.toMatchNode(456);
-    expect(123).not.toMatchNode('123');
+    expect(123).not.toMatchNode("123");
 
     expect(true).toMatchNode(true);
     expect(true).not.toMatchNode(false);
-    expect(true).not.toMatchNode('true');
+    expect(true).not.toMatchNode("true");
   });
 
-  it('matches arrays', function() {
+  it("matches arrays", function () {
     expect([1, 2, 3]).toMatchNode([1, 2, 3]);
     expect([1, 2, 3]).not.toMatchNode([4, 5, 6]);
 
-    expect([[1, 2, 3], 'foo']).toMatchNode([[1, 2, 3], 'foo']);
-    expect([[1, 2, 3], 'foo']).not.toMatchNode([[456], 'foo']);
-    expect([[1, 2, 3], 'foo']).not.toMatchNode([[1, 2, 3], 'bar']);
+    expect([[1, 2, 3], "foo"]).toMatchNode([[1, 2, 3], "foo"]);
+    expect([[1, 2, 3], "foo"]).not.toMatchNode([[456], "foo"]);
+    expect([[1, 2, 3], "foo"]).not.toMatchNode([[1, 2, 3], "bar"]);
 
     expect([1, 2, 3, 4]).toMatchNode([1, 2, 3]);
     expect([1, 2, 3]).not.toMatchNode([1, 2, 3, 4]);
   });
 
-  it('matches objects', function() {
+  it("matches objects", function () {
     expect({}).toMatchNode({});
-    expect({name: 'foo'}).toMatchNode({name: 'foo'});
-    expect({name: 'foo'}).not.toMatchNode({name: 'bar'});
+    expect({ name: "foo" }).toMatchNode({ name: "foo" });
+    expect({ name: "foo" }).not.toMatchNode({ name: "bar" });
 
-    expect({name: 'foo', value: {name: 'bar'}})
-      .toMatchNode({name: 'foo', value: {name: 'bar'}});
-    expect({name: 'foo', value: {name: 'bar'}})
-      .not.toMatchNode({name: 'foo', value: {name: 'baz'}});
+    expect({ name: "foo", value: { name: "bar" } }).toMatchNode({
+      name: "foo",
+      value: { name: "bar" },
+    });
+    expect({ name: "foo", value: { name: "bar" } }).not.toMatchNode({
+      name: "foo",
+      value: { name: "baz" },
+    });
 
-    expect({name: 'foo', value: 'bar'}).toMatchNode({name: 'foo'});
-    expect({name: 'foo'}).not.toMatchNode({name: 'foo', value: 'bar'});
+    expect({ name: "foo", value: "bar" }).toMatchNode({ name: "foo" });
+    expect({ name: "foo" }).not.toMatchNode({ name: "foo", value: "bar" });
 
-    expect(Object.create({name: 'foo'})).not.toMatchNode({name: 'foo'});
-    expect({}).toMatchNode(Object.create({name: 'foo'}));
+    expect(Object.create({ name: "foo" })).not.toMatchNode({ name: "foo" });
+    expect({}).toMatchNode(Object.create({ name: "foo" }));
   });
 
-  it('matches with a function', function() {
-    const haystack = {name: 'foo'};
+  it("matches with a function", function () {
+    const haystack = { name: "foo" };
     const needle = jest.fn();
 
     needle.mockReturnValue(true);
@@ -85,8 +89,8 @@ describe('matchNode', function() {
     expect(haystack).not.toMatchNode(needle);
   });
 
-  it('matches nested value with a function', function() {
-    const haystack = {name: 'foo', value: 'bar'};
+  it("matches nested value with a function", function () {
+    const haystack = { name: "foo", value: "bar" };
     const needle = {
       name: jest.fn(),
       value: jest.fn(),

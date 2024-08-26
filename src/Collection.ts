@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const assert = require('assert');
-const intersection = require('./utils/intersection');
-const recast = require('recast');
-const union = require('./utils/union');
+import assert from "assert";
+import intersection from "./utils/intersection";
+import recast from "recast";
+import union from "./utils/union";
 
 const astTypes = recast.types;
 var types = astTypes.namedTypes;
@@ -29,7 +28,6 @@ const Node = types.Node;
  * @mixes globalMethods
  */
 class Collection {
-
   /**
    * @param {Array} paths An array of AST paths
    * @param {Collection} parent A parent collection
@@ -37,17 +35,22 @@ class Collection {
    *  have in common. If not passed, it will be inferred from the paths.
    * @return {Collection}
    */
-  constructor(paths, parent, types) {
-    assert.ok(Array.isArray(paths), 'Collection is passed an array');
+
+  private _parent: any;
+  private _types: any;
+  public __paths: any[];
+
+  constructor(paths: any, parent: any, types: any) {
+    assert.ok(Array.isArray(paths), "Collection is passed an array");
     assert.ok(
-      paths.every(p => p instanceof NodePath),
-      'Array contains only paths'
+      paths.every((p) => p instanceof NodePath),
+      "Array contains only paths"
     );
     this._parent = parent;
     this.__paths = paths;
     if (types && !Array.isArray(types)) {
       types = _toTypeArray(types);
-    } else if (!types || Array.isArray(types) && types.length === 0) {
+    } else if (!types || (Array.isArray(types) && types.length === 0)) {
       types = _inferTypes(paths);
     }
     this._types = types.length === 0 ? _defaultType : types;
@@ -60,7 +63,8 @@ class Collection {
    * @param {function} callback
    * @return {Collection}
    */
-  filter(callback) {
+  filter(callback: any) {
+    // @ts-ignore
     return new this.constructor(this.__paths.filter(callback), this);
   }
 
@@ -70,9 +74,9 @@ class Collection {
    * @param {function} callback
    * @return {Collection} The collection itself
    */
-  forEach(callback) {
-    this.__paths.forEach(
-      (path, i, paths) => callback.call(path, path, i, paths)
+  forEach(callback: any) {
+    this.__paths.forEach((path: any, i: any, paths: any) =>
+      callback.call(path, path, i, paths)
     );
     return this;
   }
@@ -83,9 +87,9 @@ class Collection {
    * @param {function} callback
    * @return {boolean}
    */
-  some(callback) {
-    return this.__paths.some(
-      (path, i, paths) => callback.call(path, path, i, paths)
+  some(callback: any) {
+    return this.__paths.some((path: any, i: number, paths: any) =>
+      callback.call(path, path, i, paths)
     );
   }
 
@@ -95,9 +99,9 @@ class Collection {
    * @param {function} callback
    * @return {boolean}
    */
-  every(callback) {
-    return this.__paths.every(
-      (path, i, paths) => callback.call(path, path, i, paths)
+  every(callback: any) {
+    return this.__paths.every((path, i, paths) =>
+      callback.call(path, path, i, paths)
     );
   }
 
@@ -114,9 +118,9 @@ class Collection {
    * @param {function} callback
    * @param {Type} type Force the new collection to be of a specific type
    */
-  map(callback, type) {
-    const paths = [];
-    this.forEach(function(path) {
+  map(callback: any, type: any) {
+    const paths: any = [];
+    this.forEach(function (path: any) {
       /*jshint eqnull:true*/
       let result = callback.apply(path, arguments);
       if (result == null) return;
@@ -156,7 +160,7 @@ class Collection {
    * @return {Array}
    */
   nodes() {
-    return this.__paths.map(p => p.value);
+    return this.__paths.map((p) => p.value);
   }
 
   paths() {
@@ -170,14 +174,14 @@ class Collection {
     return this.__paths;
   }
 
-  toSource(options) {
+  toSource(options: any) {
     if (this._parent) {
       return this._parent.toSource(options);
     }
     if (this.__paths.length === 1) {
       return recast.print(this.__paths[0], options).code;
     } else {
-      return this.__paths.map(p => recast.print(p, options).code);
+      return this.__paths.map((p) => recast.print(p, options).code);
     }
   }
 
@@ -192,12 +196,9 @@ class Collection {
    * @param {number} index
    * @return {Collection}
    */
-  at(index) {
+  at(index: any) {
     return fromPaths(
-      this.__paths.slice(
-        index,
-        index === -1 ? undefined : index + 1
-      ),
+      this.__paths.slice(index, index === -1 ? undefined : index + 1),
       this
     );
   }
@@ -212,7 +213,7 @@ class Collection {
     if (!path) {
       throw Error(
         'You cannot call "get" on a collection with no paths. ' +
-        'Instead, check the "length" property first to verify at least 1 path exists.'
+          'Instead, check the "length" property first to verify at least 1 path exists.'
       );
     }
     return path.get.apply(path, arguments);
@@ -234,7 +235,7 @@ class Collection {
    * @param {Type} type
    * @return {boolean}
    */
-  isOfType(type) {
+  isOfType(type: any) {
     return !!type && this._types.indexOf(type.toString()) > -1;
   }
 }
@@ -245,13 +246,15 @@ class Collection {
  * @param {Array} paths An array of paths.
  * @return {Type} type An AST type
  */
-function _inferTypes(paths) {
-  let _types = [];
+function _inferTypes(paths: any) {
+  let _types: any = [];
 
   if (paths.length > 0 && Node.check(paths[0].node)) {
+    // @ts-ignore
     const nodeType = types[paths[0].node.type];
-    const sameType = paths.length === 1 ||
-      paths.every(path => nodeType.check(path.node));
+    const sameType =
+      paths.length === 1 ||
+      paths.every((path: any) => nodeType.check(path.node));
 
     if (sameType) {
       _types = [nodeType.toString()].concat(
@@ -260,7 +263,7 @@ function _inferTypes(paths) {
     } else {
       // try to find a common type
       _types = intersection(
-        paths.map(path => astTypes.getSupertypeNames(path.node.type))
+        paths.map((path: any) => astTypes.getSupertypeNames(path.node.type))
       );
     }
   }
@@ -268,23 +271,21 @@ function _inferTypes(paths) {
   return _types;
 }
 
-function _toTypeArray(value) {
+function _toTypeArray(value: any) {
   value = !Array.isArray(value) ? [value] : value;
-  value = value.map(v => v.toString());
+  value = value.map((v: any) => v.toString());
   if (value.length > 1) {
-    return union(
-      [value].concat(intersection(value.map(_getSupertypeNames)))
-    );
+    return union([value].concat(intersection(value.map(_getSupertypeNames))));
   } else {
     return value.concat(_getSupertypeNames(value[0]));
   }
 }
 
-function _getSupertypeNames(type) {
+function _getSupertypeNames(type: any) {
   try {
     return astTypes.getSupertypeNames(type);
-  } catch(error) {
-    if (error.message === '') {
+  } catch (error: any) {
+    if (error.message === "") {
       // Likely the case that the passed type wasn't found in the definition
       // list. Maybe a typo. ast-types doesn't throw a useful error in that
       // case :(
@@ -312,10 +313,10 @@ function _getSupertypeNames(type) {
  * @param {Type} type An AST type
  * @return {Collection}
  */
-function fromPaths(paths, parent, type) {
+export function fromPaths(paths: any, parent?: any, type?: any) {
   assert.ok(
-    paths.every(n => n instanceof NodePath),
-    'Every element in the array should be a NodePath'
+    paths.every((n: any) => n instanceof NodePath),
+    "Every element in the array should be a NodePath"
   );
 
   return new Collection(paths, parent, type);
@@ -333,19 +334,19 @@ function fromPaths(paths, parent, type) {
  * @param {Type} type An AST type
  * @return {Collection}
  */
-function fromNodes(nodes, parent, type) {
+export function fromNodes(nodes: any, parent?: any, type?: any) {
   assert.ok(
-    nodes.every(n => Node.check(n)),
-    'Every element in the array should be a Node'
+    nodes.every((n: any) => Node.check(n)),
+    "Every element in the array should be a Node"
   );
   return fromPaths(
-    nodes.map(n => new NodePath(n)),
+    nodes.map((n: any) => new NodePath(n)),
     parent,
     type
   );
 }
 
-const CPt = Collection.prototype;
+const CPt: any = Collection.prototype;
 
 /**
  * This function adds the provided methods to the prototype of the corresponding
@@ -355,7 +356,7 @@ const CPt = Collection.prototype;
  * @param {Object} methods Methods to add to the prototype
  * @param {Type=} type Optional type to add the methods to
  */
-function registerMethods(methods, type) {
+export function registerMethods(methods: any, type?: any) {
   for (const methodName in methods) {
     if (!methods.hasOwnProperty(methodName)) {
       return;
@@ -364,19 +365,19 @@ function registerMethods(methods, type) {
       let msg = `There is a conflicting registration for method with name "${methodName}".\nYou tried to register an additional method with `;
 
       if (type) {
-        msg += `type "${type.toString()}".`
+        msg += `type "${type.toString()}".`;
       } else {
-        msg += 'universal type.'
+        msg += "universal type.";
       }
 
-      msg += '\nThere are existing registrations for that method with ';
+      msg += "\nThere are existing registrations for that method with ";
 
       const conflictingRegistrations = CPt[methodName].typedRegistrations;
 
       if (conflictingRegistrations) {
-        msg += `type ${Object.keys(conflictingRegistrations).join(', ')}.`;
+        msg += `type ${Object.keys(conflictingRegistrations).join(", ")}.`;
       } else {
-        msg += 'universal type.';
+        msg += "universal type.";
       }
 
       throw Error(msg);
@@ -390,33 +391,38 @@ function registerMethods(methods, type) {
       }
       var registrations = CPt[methodName].typedRegistrations;
       registrations[type] = methods[methodName];
-      astTypes.getSupertypeNames(type).forEach(function (name) {
+      astTypes.getSupertypeNames(type).forEach(function (name: any) {
         registrations[name] = false;
       });
     }
   }
 }
 
-function installTypedMethod(methodName) {
+function installTypedMethod(methodName: any) {
   if (CPt.hasOwnProperty(methodName)) {
-    throw new Error(`Internal Error: "${methodName}" method is already installed`);
+    throw new Error(
+      `Internal Error: "${methodName}" method is already installed`
+    );
   }
 
-  const registrations = {};
+  const registrations: any = {};
 
   function typedMethod() {
     const types = Object.keys(registrations);
 
     for (let i = 0; i < types.length; i++) {
       const currentType = types[i];
+      // @ts-ignore
       if (registrations[currentType] && this.isOfType(currentType)) {
+        // @ts-ignore
         return registrations[currentType].apply(this, arguments);
       }
     }
 
     throw Error(
+      // @ts-ignore
       `You have a collection of type [${this.getTypes()}]. ` +
-      `"${methodName}" is only defined for one of [${types.join('|')}].`
+        `"${methodName}" is only defined for one of [${types.join("|")}].`
     );
   }
 
@@ -425,7 +431,7 @@ function installTypedMethod(methodName) {
   CPt[methodName] = typedMethod;
 }
 
-function hasConflictingRegistration(methodName, type) {
+export function hasConflictingRegistration(methodName: any, type: any) {
   if (!type) {
     return CPt.hasOwnProperty(methodName);
   }
@@ -451,7 +457,7 @@ function hasConflictingRegistration(methodName, type) {
   });
 }
 
-var _defaultType = [];
+var _defaultType: any = [];
 
 /**
  * Sets the default collection type. In case a collection is created form an
@@ -461,12 +467,10 @@ var _defaultType = [];
  * @ignore
  * @param {Type} type
  */
-function setDefaultCollectionType(type) {
+export function setDefaultCollectionType(type: any) {
   _defaultType = _toTypeArray(type);
 }
 
-exports.fromPaths = fromPaths;
-exports.fromNodes = fromNodes;
-exports.registerMethods = registerMethods;
-exports.hasConflictingRegistration = hasConflictingRegistration;
-exports.setDefaultCollectionType = setDefaultCollectionType;
+// exports.registerMethods = registerMethods;
+// exports.hasConflictingRegistration = hasConflictingRegistration;
+// exports.setDefaultCollectionType = setDefaultCollectionType;

@@ -7,18 +7,23 @@
 
 /* global expect, describe, it */
 
-'use strict';
+"use strict";
 
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
 
-function applyTransform(module, options, input, testOptions = {}) {
+function applyTransform(
+  module: any,
+  options: any,
+  input: any,
+  testOptions: any = {}
+) {
   // Handle ES6 modules using default export for the transform
   const transform = module.default ? module.default : module;
 
   // Jest resets the module registry after each test, so we need to always get
   // a fresh copy of jscodeshift on every test run.
-  let jscodeshift = require('./core');
+  let jscodeshift = require("./core");
   if (testOptions.parser || module.parser) {
     jscodeshift = jscodeshift.withParser(testOptions.parser || module.parser);
   }
@@ -33,31 +38,37 @@ function applyTransform(module, options, input, testOptions = {}) {
     options || {}
   );
 
-  return (output || '').trim();
+  return (output || "").trim();
 }
 exports.applyTransform = applyTransform;
 
-function runSnapshotTest(module, options, input) {
+function runSnapshotTest(module: any, options: any, input: any) {
   const output = applyTransform(module, options, input);
   expect(output).toMatchSnapshot();
   return output;
 }
 exports.runSnapshotTest = runSnapshotTest;
 
-function runInlineTest(module, options, input, expectedOutput, testOptions) {
+function runInlineTest(
+  module: any,
+  options: any,
+  input: any,
+  expectedOutput: any,
+  testOptions?: any
+) {
   const output = applyTransform(module, options, input, testOptions);
   expect(output).toEqual(expectedOutput.trim());
   return output;
 }
 exports.runInlineTest = runInlineTest;
 
-function extensionForParser(parser) {
+function extensionForParser(parser: any) {
   switch (parser) {
-    case 'ts':
-    case 'tsx':
+    case "ts":
+    case "tsx":
       return parser;
     default:
-      return 'js'
+      return "js";
   }
 }
 
@@ -80,70 +91,112 @@ function extensionForParser(parser) {
  * - Test data should be located in a directory called __testfixtures__
  *   alongside the transform and __tests__ directory.
  */
-function runTest(dirName, transformName, options, testFilePrefix, testOptions = {}) {
+export function runTest(
+  dirName: any,
+  transformName: any,
+  options: any,
+  testFilePrefix: any,
+  testOptions: any = {}
+) {
   if (!testFilePrefix) {
     testFilePrefix = transformName;
   }
 
   // Assumes transform is one level up from __tests__ directory
-  const module = require(path.join(dirName, '..', transformName));
-  const extension = extensionForParser(testOptions.parser || module.parser)
-  const fixtureDir = path.join(dirName, '..', '__testfixtures__');
-  const inputPath = path.join(fixtureDir, testFilePrefix + `.input.${extension}`);
-  const source = fs.readFileSync(inputPath, 'utf8');
+  const module = require(path.join(dirName, "..", transformName));
+  const extension = extensionForParser(testOptions.parser || module.parser);
+  const fixtureDir = path.join(dirName, "..", "__testfixtures__");
+  const inputPath = path.join(
+    fixtureDir,
+    testFilePrefix + `.input.${extension}`
+  );
+  const source = fs.readFileSync(inputPath, "utf8");
   const expectedOutput = fs.readFileSync(
     path.join(fixtureDir, testFilePrefix + `.output.${extension}`),
-    'utf8'
+    "utf8"
   );
-  runInlineTest(module, options, {
-    path: inputPath,
-    source
-  }, expectedOutput, testOptions);
+  runInlineTest(
+    module,
+    options,
+    {
+      path: inputPath,
+      source,
+    },
+    expectedOutput,
+    testOptions
+  );
 }
-exports.runTest = runTest;
 
 /**
  * Handles some boilerplate around defining a simple jest/Jasmine test for a
  * jscodeshift transform.
  */
-function defineTest(dirName, transformName, options, testFilePrefix, testOptions) {
+export function defineTest(
+  dirName: any,
+  transformName: any,
+  options?: any,
+  testFilePrefix?: any,
+  testOptions?: any
+) {
   const testName = testFilePrefix
     ? `transforms correctly using "${testFilePrefix}" data`
-    : 'transforms correctly';
+    : "transforms correctly";
   describe(transformName, () => {
     it(testName, () => {
       runTest(dirName, transformName, options, testFilePrefix, testOptions);
     });
   });
 }
-exports.defineTest = defineTest;
 
-function defineInlineTest(module, options, input, expectedOutput, testName) {
-  it(testName || 'transforms correctly', () => {
-    runInlineTest(module, options, {
-      source: input
-    }, expectedOutput);
+export function defineInlineTest(
+  module: any,
+  options: any,
+  input: any,
+  expectedOutput: any,
+  testName?: any
+) {
+  it(testName || "transforms correctly", () => {
+    runInlineTest(
+      module,
+      options,
+      {
+        source: input,
+      },
+      expectedOutput
+    );
   });
 }
-exports.defineInlineTest = defineInlineTest;
 
-function defineSnapshotTest(module, options, input, testName) {
-  it(testName || 'transforms correctly', () => {
+export function defineSnapshotTest(
+  module: any,
+  options: any,
+  input: any,
+  testName: any
+) {
+  it(testName || "transforms correctly", () => {
     runSnapshotTest(module, options, {
-      source: input
+      source: input,
     });
   });
 }
-exports.defineSnapshotTest = defineSnapshotTest;
 
 /**
  * Handles file-loading boilerplates, using same defaults as defineTest
  */
-function defineSnapshotTestFromFixture(dirName, module, options, testFilePrefix, testName, testOptions = {}) {
-  const extension = extensionForParser(testOptions.parser || module.parser)
-  const fixtureDir = path.join(dirName, '..', '__testfixtures__');
-  const inputPath = path.join(fixtureDir, testFilePrefix + `.input.${extension}`);
-  const source = fs.readFileSync(inputPath, 'utf8');
-  defineSnapshotTest(module, options, source, testName)
+export function defineSnapshotTestFromFixture(
+  dirName: any,
+  module: any,
+  options: any,
+  testFilePrefix: any,
+  testName?: any,
+  testOptions: any = {}
+) {
+  const extension = extensionForParser(testOptions.parser || module.parser);
+  const fixtureDir = path.join(dirName, "..", "__testfixtures__");
+  const inputPath = path.join(
+    fixtureDir,
+    testFilePrefix + `.input.${extension}`
+  );
+  const source = fs.readFileSync(inputPath, "utf8");
+  defineSnapshotTest(module, options, source, testName);
 }
-exports.defineSnapshotTestFromFixture = defineSnapshotTestFromFixture;

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const Collection = require('../Collection');
-const NodeCollection = require('./Node');
-const once = require('../utils/once');
-const recast = require('recast');
+import * as Collection from "../Collection";
+import * as NodeCollection from "./Node";
+import once from "../utils/once";
+import recast from "recast";
 
 const astNodesAreEquivalent = recast.types.astNodesAreEquivalent;
 const b = recast.types.builders;
@@ -20,8 +19,8 @@ var types = recast.types.namedTypes;
 const VariableDeclarator = recast.types.namedTypes.VariableDeclarator;
 
 /**
-* @mixin
-*/
+ * @mixin
+ */
 const globalMethods = {
   /**
    * Finds all variable declarators, optionally filtered by name.
@@ -29,10 +28,11 @@ const globalMethods = {
    * @param {string} name
    * @return {Collection}
    */
-  findVariableDeclarators: function(name) {
-    const filter = name ? {id: {name: name}} : null;
+  findVariableDeclarators: function (name: any): any {
+    const filter = name ? { id: { name: name } } : null;
+    // @ts-ignore
     return this.find(VariableDeclarator, filter);
-  }
+  },
 };
 
 const filterMethods = {
@@ -43,29 +43,34 @@ const filterMethods = {
    * @param {string|Array} names A module name or an array of module names
    * @return {Function}
    */
-  requiresModule: function(names) {
+  requiresModule: function (names: any) {
     if (names && !Array.isArray(names)) {
       names = [names];
     }
-    const requireIdentifier = b.identifier('require');
-    return function(path) {
+    const requireIdentifier = b.identifier("require");
+    return function (path: any) {
       const node = path.value;
-      if (!VariableDeclarator.check(node) ||
-          !types.CallExpression.check(node.init) ||
-          !astNodesAreEquivalent(node.init.callee, requireIdentifier)) {
+      if (
+        !VariableDeclarator.check(node) ||
+        !types.CallExpression.check(node.init) ||
+        !astNodesAreEquivalent(node.init.callee, requireIdentifier)
+      ) {
         return false;
       }
-      return !names ||
-        names.some(
-          n => astNodesAreEquivalent(node.init.arguments[0], b.literal(n))
-        );
+      return (
+        !names ||
+        names.some((n: any) =>
+          // @ts-ignore
+          astNodesAreEquivalent(node.init.arguments[0], b.literal(n))
+        )
+      );
     };
-  }
+  },
 };
 
 /**
-* @mixin
-*/
+ * @mixin
+ */
 const transformMethods = {
   /**
    * Renames a variable and all its occurrences.
@@ -73,16 +78,19 @@ const transformMethods = {
    * @param {string} newName
    * @return {Collection}
    */
-  renameTo: function(newName) {
+  renameTo: function (newName: any): any {
     // TODO: Include JSXElements
-    return this.forEach(function(path) {
+    // @ts-ignore
+    return this.forEach(function (path: any) {
       const node = path.value;
       const oldName = node.id.name;
       const rootScope = path.scope;
       const rootPath = rootScope.path;
       Collection.fromPaths([rootPath])
-        .find(types.Identifier, {name: oldName})
-        .filter(function(path) { // ignore non-variables
+        // @ts-ignore
+        .find(types.Identifier, { name: oldName })
+        .filter(function (path: any) {
+          // ignore non-variables
           const parent = path.parent.node;
 
           if (
@@ -151,6 +159,7 @@ const transformMethods = {
           if (
             types.JSXAttribute.check(parent) &&
             parent.name === path.node &&
+            // @ts-ignore
             !parent.computed
           ) {
             // <Foo oldName={oldName} />
@@ -159,7 +168,7 @@ const transformMethods = {
 
           return true;
         })
-        .forEach(function(path) {
+        .forEach(function (path: any) {
           let scope = path.scope;
           while (scope && scope !== rootScope) {
             if (scope.declares(oldName)) {
@@ -167,8 +176,8 @@ const transformMethods = {
             }
             scope = scope.parent;
           }
-          if (scope) { // identifier must refer to declared variable
-
+          if (scope) {
+            // identifier must refer to declared variable
             // It may look like we filtered out properties,
             // but the filter only ignored property "keys", not "value"s
             // In shorthand properties, "key" and "value" both have an
@@ -178,24 +187,22 @@ const transformMethods = {
               types.Property.check(parent) &&
               parent.shorthand &&
               !parent.method
-            )  {
-
-              path.parent.get('shorthand').replace(false);
+            ) {
+              path.parent.get("shorthand").replace(false);
             }
 
-            path.get('name').replace(newName);
+            path.get("name").replace(newName);
           }
         });
     });
-  }
+  },
 };
 
-
-function register() {
-  NodeCollection.register();
+function registerer() {
+  NodeCollection.registerer();
   Collection.registerMethods(globalMethods);
   Collection.registerMethods(transformMethods, VariableDeclarator);
 }
 
-exports.register = once(register);
-exports.filters = filterMethods;
+export const register = once(registerer);
+export const filters = filterMethods;

@@ -9,15 +9,13 @@
  * Example jscodeshift transformer. Simply reverses the names of all
  * identifiers.
  */
-function transformer(file, api) {
+export function transformer(file: any, api: any) {
   const j = api.jscodeshift;
 
   return j(file.source)
     .find(j.Identifier)
-    .replaceWith(
-      p => j.identifier(p.node.name.split('').reverse().join(''))
+    .replaceWith((p: any) =>
+      j.identifier(p.node.name.split("").reverse().join(""))
     )
     .toSource();
 }
-
-module.exports = transformer;

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,83 +5,70 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
+describe("Collection API", function () {
+  let nodes: any;
+  let Collection: any;
+  let recast: any;
+  let NodePath: any;
+  let types: any;
+  let b: any;
 
-describe('Collection API', function() {
-  let nodes;
-  let Collection;
-  let recast;
-  let NodePath;
-  let types;
-  let b;
-
-  beforeEach(function() {
+  beforeEach(function () {
     jest.resetModules();
 
-    Collection = require('../Collection');
-    recast = require('recast');
+    Collection = require("../Collection");
+    recast = require("recast");
 
     NodePath = recast.types.NodePath;
     types = recast.types.namedTypes;
     b = recast.types.builders;
 
-    nodes = [b.identifier('foo'), b.identifier('bar')];
+    nodes = [b.identifier("foo"), b.identifier("bar")];
   });
 
-  describe('Instantiation', function() {
-
-    it('should create a collection from an array of nodes', function() {
-      expect(Collection.fromNodes(nodes).getTypes()).toContain('Identifier');
+  describe("Instantiation", function () {
+    it("should create a collection from an array of nodes", function () {
+      expect(Collection.fromNodes(nodes).getTypes()).toContain("Identifier");
     });
 
-    it('should create a collection from an array of paths', function() {
+    it("should create a collection from an array of paths", function () {
       const paths = [
-        new NodePath(b.identifier('foo')),
-        new NodePath(b.identifier('bar')),
+        new NodePath(b.identifier("foo")),
+        new NodePath(b.identifier("bar")),
       ];
-      expect(Collection.fromPaths(paths).getTypes()).toContain('Identifier');
+      expect(Collection.fromPaths(paths).getTypes()).toContain("Identifier");
     });
 
-    it('accepts an empty array as input', function() {
-      const values = [];
+    it("accepts an empty array as input", function () {
+      const values: any = [];
       expect(() => Collection.fromPaths(values)).not.toThrow();
       expect(() => Collection.fromNodes(values)).not.toThrow();
     });
 
-    it('throws if it is passed an array of mixed values', function() {
-      const values = [
-        new NodePath(b.identifier('foo')),
-        b.identifier('bar'),
-      ];
+    it("throws if it is passed an array of mixed values", function () {
+      const values = [new NodePath(b.identifier("foo")), b.identifier("bar")];
       expect(() => Collection.fromPaths(values)).toThrow();
       expect(() => Collection.fromNodes(values)).toThrow();
     });
 
-    it('returns a collection of the closest common type', function() {
-      let nodes = [
-        b.identifier('foo'),
-        b.sequenceExpression([]),
-      ];
-      expect(Collection.fromNodes(nodes).getTypes())
-        .toContain('Expression');
+    it("returns a collection of the closest common type", function () {
+      let nodes = [b.identifier("foo"), b.sequenceExpression([])];
+      expect(Collection.fromNodes(nodes).getTypes()).toContain("Expression");
 
-      nodes = [
-        b.identifier('foo'),
-        b.blockStatement([]),
-      ];
-      expect(Collection.fromNodes(nodes).getTypes())
-        .toContain('Node');
+      nodes = [b.identifier("foo"), b.blockStatement([])];
+      expect(Collection.fromNodes(nodes).getTypes()).toContain("Node");
     });
   });
 
-  describe('Method extensions', function() {
-    it('handles method extensions for types', function() {
-      const Collection = require('../Collection');
-      const getNames = jest.fn(function() {
+  describe("Method extensions", function () {
+    it("handles method extensions for types", function () {
+      const Collection = require("../Collection");
+      const getNames = jest.fn(function () {
         expect(this.nodes()).toEqual(nodes);
       });
-      Collection.registerMethods({getNames: getNames}, types.Identifier);
+      Collection.registerMethods({ getNames: getNames }, types.Identifier);
 
       const collection = Collection.fromNodes(nodes);
 
@@ -91,74 +77,74 @@ describe('Collection API', function() {
       expect(getNames).toBeCalled();
     });
 
-    it('throws if a method is called for the wrong node type', function() {
-      const Collection = require('../Collection');
+    it("throws if a method is called for the wrong node type", function () {
+      const Collection = require("../Collection");
       const getNames = jest.fn();
-      Collection.registerMethods({getNames: getNames}, types.Identifier);
+      Collection.registerMethods({ getNames: getNames }, types.Identifier);
 
-      const collection = Collection.fromNodes([
-        b.blockStatement([])
-      ]);
+      const collection = Collection.fromNodes([b.blockStatement([])]);
 
       expect(() => collection.getNames()).toThrow();
     });
 
-    it('adds "global" methods to all types', function() {
-      const Collection = require('../Collection');
+    it('adds "global" methods to all types', function () {
+      const Collection = require("../Collection");
       const getNames = jest.fn();
-      Collection.registerMethods({getNames: getNames});
+      Collection.registerMethods({ getNames: getNames });
 
-      expect(Collection.fromNodes([b.blockStatement([])]).getNames).toBeDefined();
+      expect(
+        Collection.fromNodes([b.blockStatement([])]).getNames
+      ).toBeDefined();
       expect(Collection.fromNodes(nodes).getNames).toBeDefined();
       expect(Collection.fromNodes([]).getNames).toBeDefined();
     });
 
-    it('handles type inheritance chains', function() {
-      const Collection = require('../Collection');
-      const nodeMethod = function() {};
-      const identifierMethod = function() {};
-      Collection.registerMethods({nodeMethod: nodeMethod}, types.Node);
+    it("handles type inheritance chains", function () {
+      const Collection = require("../Collection");
+      const nodeMethod = function () {};
+      const identifierMethod = function () {};
+      Collection.registerMethods({ nodeMethod: nodeMethod }, types.Node);
       Collection.registerMethods(
-        {identifierMethod: identifierMethod},
+        { identifierMethod: identifierMethod },
         types.Identifier
       );
 
-      const collection = Collection.fromNodes([b.identifier('foo')]);
+      const collection = Collection.fromNodes([b.identifier("foo")]);
 
       expect(() => collection.identifierMethod()).not.toThrow();
       expect(() => collection.nodeMethod()).not.toThrow();
     });
 
-    it('handles type inheritance with multiple parents', function() {
+    it("handles type inheritance with multiple parents", function () {
       Collection.registerMethods(
-        {expressionMethod: function() {}},
+        { expressionMethod: function () {} },
         types.Expression
       );
       const collection = Collection.fromNodes([
-        b.functionExpression(null, [], b.blockStatement([]))
+        b.functionExpression(null, [], b.blockStatement([])),
       ]);
       expect(() => collection.expressionMethod()).not.toThrow();
     });
 
-    it('allows multiple registrations for non-conflicting types', function () {
+    it("allows multiple registrations for non-conflicting types", function () {
       Collection.registerMethods(
-        {foo: function () {}},
+        { foo: function () {} },
         types.FunctionExpression
       );
 
       Collection.registerMethods(
-        {foo: function () {}},
+        { foo: function () {} },
         types.BinaryExpression
       );
 
       const collection = Collection.fromNodes([
         b.functionExpression(null, [], b.blockStatement([])),
         b.functionExpression(null, [], b.blockStatement([])),
-        b.binaryExpression('+', b.identifier('a'), b.identifier('b'))
+        b.binaryExpression("+", b.identifier("a"), b.identifier("b")),
       ]);
 
-      function typeFilter(type) {
-        return function (path) {
+      function typeFilter(type: any) {
+        return function (path: any) {
           return type.check(path.value);
         };
       }
@@ -173,49 +159,63 @@ describe('Collection API', function() {
       }).toThrow();
     });
 
-    describe('hasConflictingRegistration', function () {
-      function register(methodName, type) {
-        const methods = {};
+    describe("hasConflictingRegistration", function () {
+      function register(methodName: any, type: any) {
+        const methods: any = {};
         methods[methodName] = function () {};
         if (!types[type]) {
-          throw new Error(type + ' is not a valid type');
+          throw new Error(type + " is not a valid type");
         }
         Collection.registerMethods(methods, types[type]);
       }
 
-      it('true if supertype is registered', function () {
-        register('supertypeIsRegistered', 'Expression');
-        expect(Collection.hasConflictingRegistration('supertypeIsRegistered', 'FunctionExpression')).toBe(true);
+      it("true if supertype is registered", function () {
+        register("supertypeIsRegistered", "Expression");
+        expect(
+          Collection.hasConflictingRegistration(
+            "supertypeIsRegistered",
+            "FunctionExpression"
+          )
+        ).toBe(true);
       });
 
-      it('true if subtype is registered', function () {
-        register('subtypeIsRegistered', 'FunctionExpression');
-        expect(Collection.hasConflictingRegistration('subtypeIsRegistered', 'Expression')).toBe(true);
+      it("true if subtype is registered", function () {
+        register("subtypeIsRegistered", "FunctionExpression");
+        expect(
+          Collection.hasConflictingRegistration(
+            "subtypeIsRegistered",
+            "Expression"
+          )
+        ).toBe(true);
       });
 
-      it('false if only a sibling type is registered', function () {
-        register('siblingIsRegistered', 'FunctionExpression');
-        expect(Collection.hasConflictingRegistration('siblingIsRegistered', 'BinaryExpression')).toBe(false);
+      it("false if only a sibling type is registered", function () {
+        register("siblingIsRegistered", "FunctionExpression");
+        expect(
+          Collection.hasConflictingRegistration(
+            "siblingIsRegistered",
+            "BinaryExpression"
+          )
+        ).toBe(false);
       });
     });
   });
 
-  describe('Processing functions', function() {
-    describe('filter', function() {
-      it('lets you filter with custom logic', function() {
-        const filter = jest.fn(function(path) {
-          return path.value.name === 'foo';
+  describe("Processing functions", function () {
+    describe("filter", function () {
+      it("lets you filter with custom logic", function () {
+        const filter = jest.fn(function (path) {
+          return path.value.name === "foo";
         });
         const fooVariables = Collection.fromNodes(nodes).filter(filter);
 
         expect(filter.mock.calls.length).toBe(2);
         expect(fooVariables.length).toBe(1);
       });
-
     });
 
-    describe('forEach', function() {
-      it('lets you iterate over each element of an collection', function() {
+    describe("forEach", function () {
+      it("lets you iterate over each element of an collection", function () {
         const each = jest.fn();
         Collection.fromNodes(nodes).forEach(each);
 
@@ -224,16 +224,16 @@ describe('Collection API', function() {
         expect(each.mock.calls[1][0].value).toBe(nodes[1]);
       });
 
-      it('returns the collection itself', function() {
+      it("returns the collection itself", function () {
         const fVariables = Collection.fromNodes(nodes);
-        const result = fVariables.forEach(function(){});
+        const result = fVariables.forEach(function () {});
 
         expect(result).toBe(fVariables);
       });
     });
 
-    describe('some', function() {
-      it('lets you test each element of a collection and stops when one passes the test', function() {
+    describe("some", function () {
+      it("lets you test each element of a collection and stops when one passes the test", function () {
         const each = jest.fn().mockImplementation(() => true);
         Collection.fromNodes(nodes).some(each);
 
@@ -241,19 +241,21 @@ describe('Collection API', function() {
         expect(each.mock.calls[0][0].value).toBe(nodes[0]);
       });
 
-      it('returns true if at least one element passes the test', function() {
-        const result = Collection.fromNodes(nodes).some((_, i) => i === 1);
+      it("returns true if at least one element passes the test", function () {
+        const result = Collection.fromNodes(nodes).some(
+          (_: any, i: any) => i === 1
+        );
         expect(result).toBe(true);
       });
 
-      it('returns false if no elements pass the test', function() {
+      it("returns false if no elements pass the test", function () {
         const result = Collection.fromNodes(nodes).some(() => false);
         expect(result).toBe(false);
       });
     });
 
-    describe('every', function() {
-      it('lets you test each element of a collection and stops when one fails the test', function() {
+    describe("every", function () {
+      it("lets you test each element of a collection and stops when one fails the test", function () {
         const each = jest.fn().mockImplementation(() => false);
         Collection.fromNodes(nodes).every(each);
 
@@ -261,21 +263,23 @@ describe('Collection API', function() {
         expect(each.mock.calls[0][0].value).toBe(nodes[0]);
       });
 
-      it('returns true if all elements pass the test', function() {
+      it("returns true if all elements pass the test", function () {
         const result = Collection.fromNodes(nodes).every(() => true);
         expect(result).toBe(true);
       });
 
-      it('returns false if at least one element does not pass the test', function() {
-        const result = Collection.fromNodes(nodes).every((_, i) => i === 1);
+      it("returns false if at least one element does not pass the test", function () {
+        const result = Collection.fromNodes(nodes).every(
+          (_: any, i: any) => i === 1
+        );
         expect(result).toBe(false);
       });
     });
 
-    describe('map', function() {
-      it('returns a new collection with mapped values', function() {
+    describe("map", function () {
+      it("returns a new collection with mapped values", function () {
         const root = Collection.fromNodes(nodes);
-        const mapped = root.map((_, i) => new NodePath(nodes[+!i]));
+        const mapped = root.map((_: any, i: any) => new NodePath(nodes[+!i]));
 
         expect(root).not.toBe(mapped);
         expect(mapped.length).toBe(2);
@@ -283,7 +287,7 @@ describe('Collection API', function() {
         expect(mapped.nodes()[1]).toBe(nodes[0]);
       });
 
-      it('dedupes elements', function() {
+      it("dedupes elements", function () {
         const path = new NodePath(nodes[0]);
         const root = Collection.fromNodes(nodes);
         const mapped = root.map(() => path);
@@ -294,24 +298,26 @@ describe('Collection API', function() {
       });
     });
 
-    describe('at', function() {
-      it('should work with positive indecies', function() {
+    describe("at", function () {
+      it("should work with positive indecies", function () {
         const root = Collection.fromNodes(nodes);
         expect(root.at(0).nodes()[0]).toEqual(nodes[0]);
         expect(root.at(1).nodes()[0]).toEqual(nodes[1]);
       });
 
-      it('should work with negative indecies', function() {
+      it("should work with negative indecies", function () {
         const root = Collection.fromNodes(nodes);
         expect(root.at(-1).nodes()[0]).toEqual(nodes[nodes.length - 1]);
         expect(root.at(-2).nodes()[0]).toEqual(nodes[nodes.length - 2]);
       });
     });
 
-    describe('get', function() {
-      it('should throw descriptive error when no paths are present', function() {
+    describe("get", function () {
+      it("should throw descriptive error when no paths are present", function () {
         const root = Collection.fromNodes([]);
-        expect(() => root.get()).toThrowError(/cannot call "get" on a collection with no paths/);
+        expect(() => root.get()).toThrowError(
+          /cannot call "get" on a collection with no paths/
+        );
       });
     });
   });

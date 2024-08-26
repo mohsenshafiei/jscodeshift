@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-module.exports = function(arrays) {
+export default function <T>(arrays: T[][]): T[] {
+  if (arrays.length === 0) return [];
   const result = new Set(arrays[0]);
-  let resultSize = result.length;
+  let resultSize = result.size;
 
   let i, value, valuesToCheck;
   for (i = 1; i < arrays.length; i++) {
@@ -24,4 +25,4 @@ module.exports = function(arrays) {
   }
 
   return Array.from(result);
-};
+}

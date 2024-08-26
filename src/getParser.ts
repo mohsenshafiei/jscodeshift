@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,20 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-module.exports = function getParser(parserName, options) {
+export function getParser(parserName?: any, options?: any) {
   switch (parserName) {
-    case 'babylon':
-      return require('../parser/babylon')(options);
-    case 'flow':
-      return require('../parser/flow')(options);
-    case 'ts':
-      return require('../parser/ts')(options);
-    case 'tsx':
-      return require('../parser/tsx')(options);
-    case 'babel':
+    case "babylon":
+      return require("../parser/babylon")(options);
+    case "flow":
+      return require("../parser/flow")(options);
+    case "ts":
+      return require("../parser/ts")(options);
+    case "tsx":
+      return require("../parser/tsx")(options);
+    case "babel":
     default:
-      return require('../parser/babel5Compat')(options);
+      return require("../parser/babel5Compat")(options);
   }
-};
+}
+
+export default getParser;

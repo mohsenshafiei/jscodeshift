@@ -5,20 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const once = require('../once');
+import once from "../once";
 
-describe('once', function() {
-  it('executes the function only once', function() {
-    const mock = jest.fn().mockImplementation(foo => foo);
-    const wrapped = once(mock);
+describe("once", function () {
+  it("executes the function only once", function () {
+    const mock = jest.fn().mockImplementation((foo) => foo);
+    const wrapped: any = once(mock);
 
-    wrapped('foo');
-    const result = wrapped('bar');
+    wrapped("foo");
+    const result = wrapped("bar");
 
-    expect(result).toEqual('foo');
+    expect(result).toEqual("foo");
     expect(mock).toHaveBeenCalledTimes(1);
   });
 });
-

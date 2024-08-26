@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
-const fs = require('fs');
-const mm = require('micromatch');
+import fs from "fs";
+import mm from "micromatch";
 
-const matchers = [];
+const matchers: any = [];
 
 /**
  * Add glob patterns to ignore matched files and folders.
@@ -11,14 +11,14 @@ const matchers = [];
  * @param {String} val - the glob or gitignore-style pattern to ignore
  * @see {@linkplain https://git-scm.com/docs/gitignore#_pattern_format}
  */
-function addIgnorePattern(val) {
-  if (val && typeof val === 'string' && val[0] !== '#') {
+function addIgnorePattern(val: any) {
+  if (val && typeof val === "string" && val[0] !== "#") {
     let pattern = val;
-    if (pattern.indexOf('/') === -1) {
-      matchers.push('**/' + pattern);
-    } else if (pattern[pattern.length-1] === '/') {
-      matchers.push('**/' + pattern + '**');
-      matchers.push(pattern + '**');
+    if (pattern.indexOf("/") === -1) {
+      matchers.push("**/" + pattern);
+    } else if (pattern[pattern.length - 1] === "/") {
+      matchers.push("**/" + pattern + "**");
+      matchers.push(pattern + "**");
     }
     matchers.push(pattern);
   }
@@ -28,8 +28,8 @@ function addIgnorePattern(val) {
  * Adds ignore patterns directly from function input
  * @param {String|Array<String>} input - the ignore patterns
  */
-function addIgnoreFromInput(input) {
-  let patterns = [];
+function addIgnoreFromInput(input: any) {
+  let patterns: any = [];
   if (input) {
     patterns = patterns.concat(input);
   }
@@ -40,17 +40,17 @@ function addIgnoreFromInput(input) {
  * Adds ignore patterns by reading files
  * @param {String|Array<String>} input - the paths to the ignore config files
  */
-function addIgnoreFromFile(input) {
-  let lines = [];
-  let files = [];
+function addIgnoreFromFile(input: any) {
+  let lines: any = [];
+  let files: any = [];
   if (input) {
     files = files.concat(input);
   }
 
-  files.forEach(function(config) {
+  files.forEach(function (config: any) {
     const stats = fs.statSync(config);
     if (stats.isFile()) {
-      const content = fs.readFileSync(config, 'utf8');
+      const content = fs.readFileSync(config, "utf8");
       lines = lines.concat(content.split(/\r?\n/));
     }
   });
@@ -58,11 +58,12 @@ function addIgnoreFromFile(input) {
   lines.forEach(addIgnorePattern);
 }
 
-function shouldIgnore(path) {
-  const matched = matchers.length ? mm.isMatch(path, matchers, { dot:true }) : false;
+export function shouldIgnore(path: any) {
+  const matched = matchers.length
+    ? mm.isMatch(path, matchers, { dot: true })
+    : false;
   return matched;
 }
 
-exports.add = addIgnoreFromInput;
-exports.addFromFile = addIgnoreFromFile;
-exports.shouldIgnore = shouldIgnore;
+export const add = addIgnoreFromInput;
+export const addFromFile = addIgnoreFromFile;

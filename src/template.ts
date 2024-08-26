@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,35 +5,36 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const recast = require('recast');
+import recast from "recast";
 
 const builders = recast.types.builders;
 const types = recast.types.namedTypes;
 
-function splice(arr, element, replacement) {
+function splice(arr: any, element: any, replacement: any) {
   arr.splice.apply(arr, [arr.indexOf(element), 1].concat(replacement));
 }
 
-function cleanLocation(node) {
+function cleanLocation(node: any) {
   delete node.start;
   delete node.end;
   delete node.loc;
   return node;
 }
 
-function ensureStatement(node) {
-  return types.Statement.check(node) ?
-    // Removing the location information seems to ensure that the node is
-    // correctly reprinted with a trailing semicolon
-    cleanLocation(node) :
-    builders.expressionStatement(node);
+function ensureStatement(node: any) {
+  return types.Statement.check(node)
+    ? // Removing the location information seems to ensure that the node is
+      // correctly reprinted with a trailing semicolon
+      cleanLocation(node)
+    : builders.expressionStatement(node);
 }
 
-function getVistor(varNames, nodes) {
+function getVistor(varNames: any, nodes: any) {
   return {
-    visitIdentifier: function(path) {
+    visitIdentifier: function (path: any) {
+      // @ts-ignore
       this.traverse(path);
       const node = path.node;
       const parent = path.parent.node;
@@ -50,30 +50,22 @@ function getVistor(varNames, nodes) {
 
       // If the replacement is an array, we need to explode the nodes in context
       if (Array.isArray(replacement)) {
-
-        if (types.Function.check(parent) &&
-            parent.params.indexOf(node) > -1) {
+        if (types.Function.check(parent) && parent.params.indexOf(node) > -1) {
           // Function parameters: function foo(${bar}) {}
           splice(parent.params, node, replacement);
         } else if (types.VariableDeclarator.check(parent)) {
           // Variable declarations: var foo = ${bar}, baz = 42;
-          splice(
-            path.parent.parent.node.declarations,
-            parent,
-            replacement
-          );
+          splice(path.parent.parent.node.declarations, parent, replacement);
         } else if (types.ArrayExpression.check(parent)) {
           // Arrays: var foo = [${bar}, baz];
           splice(parent.elements, node, replacement);
         } else if (types.Property.check(parent) && parent.shorthand) {
           // Objects: var foo = {${bar}, baz: 42};
-          splice(
-            path.parent.parent.node.properties,
-            parent,
-            replacement
-          );
-        } else if (types.CallExpression.check(parent) &&
-            parent.arguments.indexOf(node) > -1) {
+          splice(path.parent.parent.node.properties, parent, replacement);
+        } else if (
+          types.CallExpression.check(parent) &&
+          parent.arguments.indexOf(node) > -1
+        ) {
           // Function call arguments: foo(${bar}, baz)
           splice(parent.arguments, node, replacement);
         } else if (types.ExpressionStatement.check(parent)) {
@@ -91,12 +83,12 @@ function getVistor(varNames, nodes) {
       } else {
         path.replace(replacement);
       }
-    }
+    },
   };
 }
 
-function replaceNodes(src, varNames, nodes, parser) {
-  const ast = recast.parse(src, {parser});
+function replaceNodes(src: any, varNames: any, nodes: any, parser: any) {
+  const ast = recast.parse(src, { parser });
   recast.visit(ast, getVistor(varNames, nodes));
   return ast;
 }
@@ -106,38 +98,34 @@ function getUniqueVarName() {
   return `$jscodeshift${varNameCounter++}$`;
 }
 
-
-module.exports = function withParser(parser) {
-  function statements(template/*, ...nodes*/) {
+export function withParser(parser: any) {
+  function statements(template: any /*, ...nodes*/) {
     template = Array.from(template);
-    const nodes = Array.from(arguments).slice(1);
-    const varNames = nodes.map(() => getUniqueVarName());
-    const src = template.reduce(
-      (result, elem, i) => result + varNames[i - 1] + elem
+    const nodes: any = Array.from(arguments).slice(1);
+    const varNames: any = nodes.map(() => getUniqueVarName());
+    const src: any = template.reduce(
+      (result: any, elem: any, i: number) => result + varNames[i - 1] + elem
     );
 
-    return replaceNodes(
-      src,
-      varNames,
-      nodes,
-      parser
-    ).program.body;
+    return replaceNodes(src, varNames, nodes, parser).program.body;
   }
 
   function statement(/*template, ...nodes*/) {
+    // @ts-ignore
     return statements.apply(null, arguments)[0];
   }
 
-  function expression(template/*, ...nodes*/) {
+  function expression(template: any /*, ...nodes*/) {
     // wrap code in `(...)` to force evaluation as expression
     template = Array.from(template);
     if (template.length > 0) {
-      template[0] = '(' + template[0];
-      template[template.length - 1] += ')';
+      template[0] = "(" + template[0];
+      template[template.length - 1] += ")";
     }
 
     const expression = statement.apply(
       null,
+      // @ts-ignore
       [template].concat(Array.from(arguments).slice(1))
     ).expression;
 
@@ -149,15 +137,16 @@ module.exports = function withParser(parser) {
     return expression;
   }
 
-  function asyncExpression(template/*, ...nodes*/) {
+  function asyncExpression(template: any /*, ...nodes*/) {
     template = Array.from(template);
     if (template.length > 0) {
-      template[0] = 'async () => (' + template[0];
-      template[template.length - 1] += ')';
+      template[0] = "async () => (" + template[0];
+      template[template.length - 1] += ")";
     }
 
     const expression = statement.apply(
       null,
+      // @ts-ignore
       [template].concat(Array.from(arguments).slice(1))
     ).expression.body;
 
@@ -169,5 +158,5 @@ module.exports = function withParser(parser) {
     return expression;
   }
 
-  return {statements, statement, expression, asyncExpression};
+  return { statements, statement, expression, asyncExpression };
 }

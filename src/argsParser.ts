@@ -5,30 +5,30 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-function throwError(exitCode, message, helpText) {
-  const error = new Error(
-    helpText ?  `${message}\n\n---\n\n${helpText}` : message
+function throwError(exitCode: any, message: any, helpText?: any) {
+  const error: any = new Error(
+    helpText ? `${message}\n\n---\n\n${helpText}` : message
   );
   error.exitCode = exitCode;
   throw error;
 }
 
-function formatOption(option) {
-  let text = '  ';
-  text += option.abbr ? `-${option.abbr}, ` : '    ';
-  text += `--${option.flag ? '(no-)' : ''}${option.full}`;
+function formatOption(option: any) {
+  let text = "  ";
+  text += option.abbr ? `-${option.abbr}, ` : "    ";
+  text += `--${option.flag ? "(no-)" : ""}${option.full}`;
   if (option.choices) {
-    text += `=${option.choices.join('|')}`;
+    text += `=${option.choices.join("|")}`;
   } else if (option.metavar) {
     text += `=${option.metavar}`;
   }
   if (option.list) {
-    text += ' ...';
+    text += " ...";
   }
   if (option.defaultHelp || option.default !== undefined || option.help) {
-    text += '  ';
+    text += "  ";
     if (text.length < 32) {
-      text += ' '.repeat(32 - text.length);
+      text += " ".repeat(32 - text.length);
     }
     const textLength = text.length;
     if (option.help) {
@@ -36,19 +36,21 @@ function formatOption(option) {
     }
     if (option.defaultHelp || option.default !== undefined) {
       if (option.help) {
-        text += '\n';
+        text += "\n";
       }
-      text += `${' '.repeat(textLength)}(default: ${option.defaultHelp || option.default})`;
+      text += `${" ".repeat(textLength)}(default: ${
+        option.defaultHelp || option.default
+      })`;
     }
   }
 
   return text;
 }
 
-function getHelpText(options) {
+function getHelpText(options: any) {
   const opts = Object.keys(options)
-    .map(k => options[k])
-    .sort((a,b) => a.display_index - b.display_index);
+    .map((k) => options[k])
+    .sort((a, b) => a.display_index - b.display_index);
 
   const text = `
 Usage: jscodeshift [OPTION]... PATH...
@@ -63,41 +65,39 @@ Options:
 "..." behind an option means that it can be supplied multiple times.
 All options are also passed to the transformer, which means you can supply custom options that are not listed here.
 
-${opts.map(formatOption).join('\n')}
+${opts.map(formatOption).join("\n")}
 `;
   return text.trimLeft();
 }
 
-function validateOptions(parsedOptions, options) {
+function validateOptions(parsedOptions: any, options: any) {
   const errors = [];
   for (const optionName in options) {
     const option = options[optionName];
     if (option.choices && !option.choices.includes(parsedOptions[optionName])) {
       errors.push(
-        `Error: --${option.full} must be one of the values ${option.choices.join(',')}`
+        `Error: --${
+          option.full
+        } must be one of the values ${option.choices.join(",")}`
       );
     }
   }
   if (errors.length > 0) {
-    throwError(
-      1,
-      errors.join('\n'),
-      getHelpText(options)
-    );
+    throwError(1, errors.join("\n"), getHelpText(options));
   }
 }
 
-function prepareOptions(options) {
+function prepareOptions(options: any) {
   options.help = {
     display_index: 5,
-    abbr: 'h',
-    help: 'print this help and exit',
+    abbr: "h",
+    help: "print this help and exit",
     callback() {
       return getHelpText(options);
     },
   };
 
-  const preparedOptions = {};
+  const preparedOptions: any = {};
 
   for (const optionName of Object.keys(options)) {
     const option = options[optionName];
@@ -106,27 +106,27 @@ function prepareOptions(options) {
     }
     option.key = optionName;
 
-    preparedOptions['--'+option.full] = option;
+    preparedOptions["--" + option.full] = option;
     if (option.abbr) {
-      preparedOptions['-'+option.abbr] = option;
+      preparedOptions["-" + option.abbr] = option;
     }
     if (option.flag) {
-      preparedOptions['--no-'+option.full] = option;
+      preparedOptions["--no-" + option.full] = option;
     }
   }
 
   return preparedOptions;
 }
 
-function isOption(value) {
+function isOption(value: any) {
   return /^--?/.test(value);
 }
 
-function parse(options, args=process.argv.slice(2)) {
+function parse(options: any, args = process.argv.slice(2)) {
   const missingValue = Symbol();
   const preparedOptions = prepareOptions(options);
 
-  const parsedOptions = {};
+  const parsedOptions: any = {};
   const positionalArguments = [];
 
   for (const optionName in options) {
@@ -144,10 +144,10 @@ function parse(options, args=process.argv.slice(2)) {
       let optionName = arg;
       let value = null;
       let option = null;
-      if (optionName.includes('=')) {
-        const index = arg.indexOf('=');
+      if (optionName.includes("=")) {
+        const index = arg.indexOf("=");
         optionName = arg.slice(0, index);
-        value = arg.slice(index+1);
+        value = arg.slice(index + 1);
       }
       if (preparedOptions.hasOwnProperty(optionName)) {
         option = preparedOptions[optionName];
@@ -160,21 +160,23 @@ function parse(options, args=process.argv.slice(2)) {
         // - If the option has been seen before, it's converted to a list
         //   If the previous value was true (i.e. a flag), that value is
         //   discarded.
-        const realOptionName = optionName.replace(/^--?(no-)?/, '');
-        const isList = parsedOptions.hasOwnProperty(realOptionName) &&
+        const realOptionName = optionName.replace(/^--?(no-)?/, "");
+        const isList =
+          parsedOptions.hasOwnProperty(realOptionName) &&
           parsedOptions[realOptionName] !== true;
         option = {
           key: realOptionName,
           full: realOptionName,
-          flag: !parsedOptions.hasOwnProperty(realOptionName) &&
-                value === null &&
-                isOption(args[i+1]),
+          flag:
+            !parsedOptions.hasOwnProperty(realOptionName) &&
+            value === null &&
+            isOption(args[i + 1]),
           list: isList,
-          process(value) {
+          process(value: any) {
             // Try to parse values as JSON to be compatible with nomnom
             try {
               return JSON.parse(value);
-            } catch(_e) {}
+            } catch (_e) {}
             return value;
           },
         };
@@ -182,9 +184,8 @@ function parse(options, args=process.argv.slice(2)) {
         if (isList) {
           const currentValue = parsedOptions[realOptionName];
           if (!Array.isArray(currentValue)) {
-            parsedOptions[realOptionName] = currentValue === true ?
-              [] :
-              [currentValue];
+            parsedOptions[realOptionName] =
+              currentValue === true ? [] : [currentValue];
           }
         }
       }
@@ -192,18 +193,18 @@ function parse(options, args=process.argv.slice(2)) {
       if (option.callback) {
         throwError(0, option.callback());
       } else if (option.flag) {
-        if (optionName.startsWith('--no-')) {
+        if (optionName.startsWith("--no-")) {
           value = false;
         } else if (value !== null) {
-          value = value === '1';
+          value = value === "1";
         } else {
           value = true;
         }
         parsedOptions[option.key] = value;
       } else {
-        if (value === null && i <  args.length - 1 && !isOption(args[i+1])) {
+        if (value === null && i < args.length - 1 && !isOption(args[i + 1])) {
           // consume next value
-          value = args[i+1];
+          value = args[i + 1];
           i += 1;
         }
         if (value !== null) {
@@ -244,7 +245,7 @@ function parse(options, args=process.argv.slice(2)) {
   return result;
 }
 
-module.exports = {
+export default {
   /**
    * `options` is an object of objects. Each option can have the following
    * properties:
@@ -260,9 +261,9 @@ module.exports = {
    *   - callback: If option is supplied, call this function and exit
    *   - process: Pre-process value before returning it
    */
-  options(options) {
+  options(options: any) {
     return {
-      parse(args) {
+      parse(args: any) {
         return parse(options, args);
       },
       getHelpText() {

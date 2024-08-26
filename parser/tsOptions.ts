@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,41 +5,41 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
 /**
  * Options shared by the TypeScript and TSX parsers.
  */
-module.exports = {
-  sourceType: 'module',
+export default {
+  sourceType: "module",
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
   startLine: 1,
   tokens: true,
   plugins: [
-    'asyncGenerators',
-    'decoratorAutoAccessors',
-    'bigInt',
-    'classPrivateMethods',
-    'classPrivateProperties',
-    'classProperties',
-    'decorators-legacy',
-    'doExpressions',
-    'dynamicImport',
-    'exportDefaultFrom',
-    'exportExtensions',
-    'exportNamespaceFrom',
-    'functionBind',
-    'functionSent',
-    'importAttributes',
-    'importMeta',
-    'nullishCoalescingOperator',
-    'numericSeparator',
-    'objectRestSpread',
-    'optionalCatchBinding',
-    'optionalChaining',
-    ['pipelineOperator', { proposal: 'minimal' }],
-    'throwExpressions',
-    'typescript'
+    "asyncGenerators",
+    "decoratorAutoAccessors",
+    "bigInt",
+    "classPrivateMethods",
+    "classPrivateProperties",
+    "classProperties",
+    "decorators-legacy",
+    "doExpressions",
+    "dynamicImport",
+    "exportDefaultFrom",
+    "exportExtensions",
+    "exportNamespaceFrom",
+    "functionBind",
+    "functionSent",
+    "importAttributes",
+    "importMeta",
+    "nullishCoalescingOperator",
+    "numericSeparator",
+    "objectRestSpread",
+    "optionalCatchBinding",
+    "optionalChaining",
+    ["pipelineOperator", { proposal: "minimal" }],
+    "throwExpressions",
+    "typescript",
   ],
 };

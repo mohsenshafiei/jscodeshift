@@ -7,15 +7,15 @@
 
 "use strict";
 
-const getParser = require("./../../getParser");
+import getParser from "./../../getParser";
 
 describe("ImportDeclaration API", function () {
-  let nodes;
-  let Collection;
-  let ImportDeclarationCollection;
-  let recast;
-  let types;
-  let b;
+  let nodes: any;
+  let Collection: any;
+  let ImportDeclarationCollection: any;
+  let recast: any;
+  let types: any;
+  let b: any;
 
   beforeEach(function () {
     jest.resetModules();

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-module.exports = {
-  Node: require('./Node'),
-  JSXElement: require('./JSXElement'),
-  VariableDeclarator: require('./VariableDeclarator'),
-  ImportDeclaration: require('./ImportDeclaration'),
-};
+import * as Node from "./Node";
+import * as JSXElement from "./JSXElement";
+import * as VariableDeclarator from "./VariableDeclarator";
+import * as ImportDeclaration from "./ImportDeclaration";
+
+export { Node, JSXElement, VariableDeclarator, ImportDeclaration };

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const flowParser = require('flow-parser');
+// @ts-ignore
+import flowParser from "flow-parser";
 
 const defaultOptions = {
   enums: true,
@@ -25,10 +25,10 @@ const defaultOptions = {
 /**
  * Wrapper to set default options
  */
-module.exports = function(options=defaultOptions) {
+export default function (options = defaultOptions) {
   return {
-    parse(code) {
+    parse(code: any) {
       return flowParser.parse(code, options);
     },
   };
-};
+}

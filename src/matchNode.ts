@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const hasOwn =
-  Object.prototype.hasOwnProperty.call.bind(Object.prototype.hasOwnProperty);
+const hasOwn = Object.prototype.hasOwnProperty.call.bind(
+  Object.prototype.hasOwnProperty
+);
 
 /**
  * Checks whether needle is a strict subset of haystack.
@@ -18,12 +18,12 @@ const hasOwn =
  * @param {*} needle Test function or value to look for in `haystack`.
  * @return {bool}
  */
-function matchNode(haystack, needle) {
-  if (typeof needle === 'function') {
+export function matchNode(haystack: any, needle: any): any {
+  if (typeof needle === "function") {
     return needle(haystack);
   }
   if (isNode(needle) && isNode(haystack)) {
-    return Object.keys(needle).every(function(property) {
+    return Object.keys(needle).every(function (property) {
       return (
         hasOwn(haystack, property) &&
         matchNode(haystack[property], needle[property])
@@ -33,8 +33,6 @@ function matchNode(haystack, needle) {
   return haystack === needle;
 }
 
-function isNode(value) {
-  return typeof value === 'object' && value;
+function isNode(value: any) {
+  return typeof value === "object" && value;
 }
-
-module.exports = matchNode;

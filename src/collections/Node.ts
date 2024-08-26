@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,22 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const Collection = require('../Collection');
+import * as Collection from "../Collection";
 
-const matchNode = require('../matchNode');
-const once = require('../utils/once');
-const recast = require('recast');
+import { matchNode } from "../matchNode";
+import once from "../utils/once";
+import recast from "recast";
 
 const Node = recast.types.namedTypes.Node;
 var types = recast.types.namedTypes;
 
 /**
-* @mixin
-*/
+ * @mixin
+ */
 const traversalMethods = {
-
   /**
    * Find nodes of a specific type within the nodes of this collection.
    *
@@ -29,22 +27,27 @@ const traversalMethods = {
    * @param {filter}
    * @return {Collection}
    */
-  find: function(type, filter) {
-    const paths = [];
-    const visitorMethodName = 'visit' + type;
+  find: function (type: any, filter: any) {
+    const paths: any = [];
+    const visitorMethodName = "visit" + type;
 
     const visitor = {};
-    function visit(path) {
+    function visit(path: any) {
       /*jshint validthis:true */
       if (!filter || matchNode(path.value, filter)) {
         paths.push(path);
       }
+      // @ts-ignore
       this.traverse(path);
     }
-    this.__paths.forEach(function(p, i) {
+    // @ts-ignore
+    this.__paths.forEach(function (p: any, i: any) {
+      // @ts-ignore
       const self = this;
-      visitor[visitorMethodName] = function(path) {
+      // @ts-ignore
+      visitor[visitorMethodName] = function (path: any) {
         if (self.__paths[i] === path) {
+          // @ts-ignore
           this.traverse(path);
         } else {
           return visit.call(this, path);
@@ -62,8 +65,9 @@ const traversalMethods = {
    *
    * @return {Collection}
    */
-  closestScope: function() {
-    return this.map(path => path.scope && path.scope.path);
+  closestScope: function (): any {
+    // @ts-ignore
+    return this.map((path: any) => path.scope && path.scope.path);
   },
 
   /**
@@ -73,8 +77,9 @@ const traversalMethods = {
    * @param {filter}
    * @return {Collection}
    */
-  closest: function(type, filter) {
-    return this.map(function(path) {
+  closest: function (type: any, filter: any): any {
+    // @ts-ignore
+    return this.map(function (path: any) {
       let parent = path.parent;
       while (
         parent &&
@@ -100,8 +105,9 @@ const traversalMethods = {
    *
    * @return {Collection}
    */
-  getVariableDeclarators: function(nameGetter) {
-    return this.map(function(path) {
+  getVariableDeclarators: function (nameGetter: any): any {
+    // @ts-ignore
+    return this.map(function (path: any) {
       /*jshint curly:false*/
       let scope = path.scope;
       if (!scope) return;
@@ -111,8 +117,10 @@ const traversalMethods = {
       if (!scope) return;
       const bindings = scope.getBindings()[name];
       if (!bindings) return;
-      const decl = Collection.fromPaths(bindings)
-        .closest(types.VariableDeclarator);
+      // @ts-ignore
+      const decl = Collection.fromPaths(bindings).closest(
+        types.VariableDeclarator
+      );
       if (decl.length === 1) {
         return decl.paths()[0];
       }
@@ -120,13 +128,13 @@ const traversalMethods = {
   },
 };
 
-function toArray(value) {
+function toArray(value: any) {
   return Array.isArray(value) ? value : [value];
 }
 
 /**
-* @mixin
-*/
+ * @mixin
+ */
 const mutationMethods = {
   /**
    * Simply replaces the selected nodes with the provided node. If a function
@@ -136,10 +144,11 @@ const mutationMethods = {
    * @param {Node|Array<Node>|function} nodes
    * @return {Collection}
    */
-  replaceWith: function(nodes) {
-    return this.forEach(function(path, i) {
+  replaceWith: function (nodes: any): any {
+    // @ts-ignore
+    return this.forEach(function (path: any, i: any) {
       const newNodes =
-        (typeof nodes === 'function') ? nodes.call(path, path, i) : nodes;
+        typeof nodes === "function" ? nodes.call(path, path, i) : nodes;
       path.replace.apply(path, toArray(newNodes));
     });
   },
@@ -150,10 +159,11 @@ const mutationMethods = {
    * @param {Node|Array<Node>|function} insert
    * @return {Collection}
    */
-  insertBefore: function(insert) {
-    return this.forEach(function(path, i) {
+  insertBefore: function (insert: any): any {
+    // @ts-ignore
+    return this.forEach(function (path: any, i: any) {
       const newNodes =
-        (typeof insert === 'function') ? insert.call(path, path, i) : insert;
+        typeof insert === "function" ? insert.call(path, path, i) : insert;
       path.insertBefore.apply(path, toArray(newNodes));
     });
   },
@@ -164,24 +174,25 @@ const mutationMethods = {
    * @param {Node|Array<Node>|function} insert
    * @return {Collection}
    */
-  insertAfter: function(insert) {
-    return this.forEach(function(path, i) {
+  insertAfter: function (insert: any): any {
+    // @ts-ignore
+    return this.forEach(function (path: any, i: any) {
       const newNodes =
-        (typeof insert === 'function') ? insert.call(path, path, i) : insert;
+        typeof insert === "function" ? insert.call(path, path, i) : insert;
       path.insertAfter.apply(path, toArray(newNodes));
     });
   },
 
-  remove: function() {
-    return this.forEach(path => path.prune());
-  }
-
+  remove: function (): any {
+    // @ts-ignore
+    return this.forEach((path: any) => path.prune());
+  },
 };
 
-function register() {
+export function registerer() {
   Collection.registerMethods(traversalMethods, Node);
   Collection.registerMethods(mutationMethods, Node);
   Collection.setDefaultCollectionType(Node);
 }
 
-exports.register = once(register);
+export const register = once(registerer);

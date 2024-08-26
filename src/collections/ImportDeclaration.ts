@@ -7,12 +7,12 @@
 
 "use strict";
 
-const Collection = require("../Collection");
-const NodeCollection = require("./Node");
+import * as Collection from "../Collection";
+import * as NodeCollection from "./Node";
 
-const assert = require("assert");
-const once = require("../utils/once");
-const recast = require("recast");
+import assert from "assert";
+import once from "../utils/once";
+import recast from "recast";
 
 const types = recast.types.namedTypes;
 
@@ -23,7 +23,7 @@ const globalMethods = {
    * @param {string} sourcePath
    * @param {Array} specifiers
    */
-  insertImportDeclaration: function (sourcePath, specifiers) {
+  insertImportDeclaration: function (sourcePath: any, specifiers: any): any {
     assert.ok(
       sourcePath && typeof sourcePath === "string",
       "insertImportDeclaration(...) needs a source path"
@@ -43,7 +43,8 @@ const globalMethods = {
       recast.types.builders.stringLiteral(sourcePath)
     );
 
-    return this.forEach((path) => {
+    // @ts-ignore
+    return this.forEach((path: any) => {
       if (path.value.type === "Program") {
         path.value.body.unshift(importDeclaration);
       }
@@ -55,12 +56,13 @@ const globalMethods = {
    * @param {string} sourcePath
    * @return {Collection}
    */
-  findImportDeclarations: function (sourcePath) {
+  findImportDeclarations: function (sourcePath: any): any {
     assert.ok(
       sourcePath && typeof sourcePath === "string",
       "findImportDeclarations(...) needs a source path"
     );
 
+    // @ts-ignore
     return this.find(types.ImportDeclaration, {
       source: { value: sourcePath },
     });
@@ -72,7 +74,7 @@ const globalMethods = {
    * @param {string} sourcePath
    * @returns {boolean}
    */
-  hasImportDeclaration: function (sourcePath) {
+  hasImportDeclaration: function (sourcePath: any) {
     assert.ok(
       sourcePath && typeof sourcePath === "string",
       "findImportDeclarations(...) needs a source path"
@@ -88,7 +90,7 @@ const globalMethods = {
    * @param {string} newSourcePath
    * @return {Collection}
    */
-  renameImportDeclaration: function (sourcePath, newSourcePath) {
+  renameImportDeclaration: function (sourcePath: any, newSourcePath: any) {
     assert.ok(
       sourcePath && typeof sourcePath === "string",
       "renameImportDeclaration(...) needs a name to look for"
@@ -99,14 +101,14 @@ const globalMethods = {
       "renameImportDeclaration(...) needs a new name to rename to"
     );
 
-    return this.findImportDeclarations(sourcePath).forEach((path) => {
+    return this.findImportDeclarations(sourcePath).forEach((path: any) => {
       path.value.source.value = newSourcePath;
     });
   },
 };
 
 function register() {
-  NodeCollection.register();
+  NodeCollection.registerer();
   Collection.registerMethods(globalMethods, types.Node);
 }
 

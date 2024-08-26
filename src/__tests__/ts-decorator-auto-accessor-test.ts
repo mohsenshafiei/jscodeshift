@@ -1,26 +1,24 @@
-'use strict';
+"use strict";
 
-function transformer(file, api) {
-  const j = api.jscodeshift;
+import { API, FileInfo, JSCodeshift } from "jscodeshift";
+import { defineInlineTest } from "../testUtils";
+
+function transformer(file: FileInfo, api: API): string {
+  const j: JSCodeshift = api.jscodeshift;
 
   return j(file.source).toSource();
 }
 
-transformer.parser = 'ts';
+transformer.parser = "ts";
 
 jest.autoMockOff();
-const defineInlineTest = require('../../src/testUtils').defineInlineTest;
 
-describe('should be parse typescript decoratorAutoAccessors correctly', function () {
+describe("should parse TypeScript decoratorAutoAccessors correctly", function () {
   defineInlineTest(
     transformer,
     {},
-    'export class Test {\n' +
-    '  public accessor myValue = 10;\n' +
-    '}\n',
-    'export class Test {\n' +
-    '  public accessor myValue = 10;\n' +
-    '}',
-    'ts-decorator-auto-accessor',
+    "export class Test {\n" + "  public accessor myValue = 10;\n" + "}\n",
+    "export class Test {\n" + "  public accessor myValue = 10;\n" + "}",
+    "ts-decorator-auto-accessor"
   );
 });

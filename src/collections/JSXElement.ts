@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const Collection = require('../Collection');
-const NodeCollection = require('./Node');
+import * as Collection from "../Collection";
+import * as NodeCollection from "./Node";
 
-const assert = require('assert');
-const once = require('../utils/once');
-const recast = require('recast');
-const requiresModule = require('./VariableDeclarator').filters.requiresModule;
+import assert from "assert";
+import once from "../utils/once";
+import recast from "recast";
+const requiresModule = require("./VariableDeclarator").filters.requiresModule;
 
 const types = recast.types.namedTypes;
 const JSXElement = types.JSXElement;
@@ -32,8 +31,9 @@ const globalMethods = {
    * @param {string} name
    * @return {Collection}
    */
-  findJSXElements: function(name) {
-    const nameFilter = name && {openingElement: {name: {name: name}}};
+  findJSXElements: function (name: any): any {
+    const nameFilter = name && { openingElement: { name: { name: name } } };
+    // @ts-ignore
     return this.find(JSXElement, nameFilter);
   },
 
@@ -46,51 +46,55 @@ const globalMethods = {
    * findJSXElementsByModuleName('Foo') will find <Bar />, without having to
    * know the variable name.
    */
-  findJSXElementsByModuleName: function(moduleName) {
+  findJSXElementsByModuleName: function (moduleName: any): any {
     assert.ok(
-      moduleName && typeof moduleName === 'string',
-      'findJSXElementsByModuleName(...) needs a name to look for'
+      moduleName && typeof moduleName === "string",
+      "findJSXElementsByModuleName(...) needs a name to look for"
     );
 
+    // @ts-ignore
     return this.find(types.VariableDeclarator)
       .filter(requiresModule(moduleName))
-      .map(function(path) {
+      .map(function (path: any) {
         const id = path.value.id.name;
         if (id) {
-          return Collection.fromPaths([path])
-            .closestScope()
-            .findJSXElements(id)
-            .paths();
+          return (
+            Collection.fromPaths([path])
+              // @ts-ignore
+              .closestScope()
+              .findJSXElements(id)
+              .paths()
+          );
         }
       });
-  }
+  },
 };
 
 const filterMethods = {
-
   /**
    * Filter method for attributes.
    *
    * @param {Object} attributeFilter
    * @return {function}
    */
-  hasAttributes: function(attributeFilter) {
+  hasAttributes: function (attributeFilter: any) {
     const attributeNames = Object.keys(attributeFilter);
-    return function filter(path) {
+    return function filter(path: any) {
       if (!JSXElement.check(path.value)) {
         return false;
       }
       const elementAttributes = Object.create(null);
-      path.value.openingElement.attributes.forEach(function(attr) {
-        if (!JSXAttribute.check(attr) ||
-          !(attr.name.name in attributeFilter)) {
+      path.value.openingElement.attributes.forEach(function (attr: any) {
+        // @ts-ignore
+        if (!JSXAttribute.check(attr) || !(attr.name.name in attributeFilter)) {
           return;
         }
+        // @ts-ignore
         elementAttributes[attr.name.name] = attr;
       });
 
-      return attributeNames.every(function(name) {
-        if (!(name in elementAttributes) ){
+      return attributeNames.every(function (name) {
+        if (!(name in elementAttributes)) {
           return false;
         }
 
@@ -104,11 +108,11 @@ const filterMethods = {
           ? value.value
           : value.expression;
 
-        if (typeof expected === 'function') {
+        if (typeof expected === "function") {
           return expected(actual);
         }
 
-         // Literal attribute values are always strings
+        // Literal attribute values are always strings
         return String(expected) === actual;
       });
     };
@@ -120,31 +124,34 @@ const filterMethods = {
    * @param {string} name
    * @return {function}
    */
-  hasChildren: function(name) {
-    return function filter(path) {
-      return JSXElement.check(path.value) &&
+  hasChildren: function (name: any) {
+    return function filter(path: any) {
+      return (
+        JSXElement.check(path.value) &&
         path.value.children.some(
-          child => JSXElement.check(child) &&
-                   child.openingElement.name.name === name
-        );
+          (child: any) =>
+            // @ts-ignore
+            JSXElement.check(child) && child.openingElement.name.name === name
+        )
+      );
     };
-  }
+  },
 };
 
 /**
-* @mixin
-*/
+ * @mixin
+ */
 const traversalMethods = {
-
   /**
    * Returns all child nodes, including literals and expressions.
    *
    * @return {Collection}
    */
-  childNodes: function() {
-    const paths = [];
-    this.forEach(function(path) {
-      const children = path.get('children');
+  childNodes: function () {
+    const paths: any = [];
+    // @ts-ignore
+    this.forEach(function (path: any) {
+      const children = path.get("children");
       const l = children.value.length;
       for (let i = 0; i < l; i++) {
         paths.push(children.get(i));
@@ -158,10 +165,11 @@ const traversalMethods = {
    *
    * @return {JSXElementCollection}
    */
-  childElements: function() {
-    const paths = [];
-    this.forEach(function(path) {
-      const children = path.get('children');
+  childElements: function () {
+    const paths: any = [];
+    // @ts-ignore
+    this.forEach(function (path: any) {
+      const children = path.get("children");
       const l = children.value.length;
       for (let i = 0; i < l; i++) {
         if (types.JSXElement.check(children.value[i])) {
@@ -177,10 +185,11 @@ const traversalMethods = {
    *
    * @return {Collection<jsxElementType>}
    */
-  childNodesOfType: function(jsxChildElementType) {
-    const paths = [];
-    this.forEach(function(path) {
-      const children = path.get('children');
+  childNodesOfType: function (jsxChildElementType: any) {
+    const paths: any = [];
+    // @ts-ignore
+    this.forEach(function (path: any) {
+      const children = path.get("children");
       const l = children.value.length;
       for (let i = 0; i < l; i++) {
         if (jsxChildElementType.check(children.value[i])) {
@@ -200,22 +209,22 @@ const mappingMethods = {
    * @param {NodePath} path
    * @return {string}
    */
-  getRootName: function(path) {
+  getRootName: function (path: any) {
     let name = path.value.openingElement.name;
     while (types.JSXMemberExpression.check(name)) {
       name = name.object;
     }
 
-    return name && name.name || null;
-  }
+    return (name && name.name) || null;
+  },
 };
 
-function register() {
-  NodeCollection.register();
+function registerer() {
+  NodeCollection.registerer();
   Collection.registerMethods(globalMethods, types.Node);
   Collection.registerMethods(traversalMethods, JSXElement);
 }
 
-exports.register = once(register);
-exports.filters = filterMethods;
-exports.mappings = mappingMethods;
+export const register = once(registerer);
+export const filters = filterMethods;
+export const mappings = mappingMethods;

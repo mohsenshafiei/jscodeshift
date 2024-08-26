@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,22 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const babylon = require('@babel/parser');
-const baseOptions = require('./tsOptions');
+import babylon from "@babel/parser";
+import baseOptions from "./tsOptions";
 
-const options = Object.assign({}, baseOptions);
-options.plugins = ['jsx'].concat(baseOptions.plugins);
+const options: any = Object.assign({}, baseOptions);
+options.plugins = ["jsx"].concat(baseOptions.plugins as any);
 
 /**
  * Doesn't accept custom options because babylon should be used directly in
  * that case.
  */
-module.exports = function() {
+export default function () {
   return {
-    parse(code) {
+    parse(code: any) {
       return babylon.parse(code, options);
     },
   };
-};
+}

@@ -13,33 +13,53 @@
  * in reverse-identifiers-output.
  */
 
-'use strict';
+"use strict";
 
 jest.autoMockOff();
-const defineTest = require('../../src/testUtils').defineTest;
-const defineInlineTest = require('../../src/testUtils').defineInlineTest;
-const defineSnapshotTestFromFixture = require('../../src/testUtils').defineSnapshotTestFromFixture;
-const transform = require('../reverse-identifiers');
+import {
+  defineTest,
+  defineInlineTest,
+  defineSnapshotTestFromFixture,
+} from "../../src/testUtils";
+import { transformer } from "../reverse-identifiers";
 
-defineTest(__dirname, 'reverse-identifiers');
+defineTest(__dirname, "reverse-identifiers");
 
-defineTest(__dirname, 'reverse-identifiers', null, 'typescript/reverse-identifiers', { parser: 'ts' });
+defineTest(
+  __dirname,
+  "reverse-identifiers",
+  null,
+  "typescript/reverse-identifiers",
+  { parser: "ts" }
+);
 
-describe('reverse-identifiers', () => {
-  defineInlineTest(transform, {}, `
+describe("reverse-identifiers", () => {
+  defineInlineTest(
+    transformer,
+    {},
+    `
 var firstWord = 'Hello ';
 var secondWord = 'world';
-var message = firstWord + secondWord;`,`
+var message = firstWord + secondWord;`,
+    `
 var droWtsrif = 'Hello ';
 var droWdnoces = 'world';
 var egassem = droWtsrif + droWdnoces;
-  `);
-  defineInlineTest(transform, {},
-    'function aFunction() {};',
-    'function noitcnuFa() {};',
-    'Reverses function names'
+  `
+  );
+  defineInlineTest(
+    transformer,
+    {},
+    "function aFunction() {};",
+    "function noitcnuFa() {};",
+    "Reverses function names"
   );
 });
 
 // the snapshot output of this file should be the same as reverse-identifiers.output.js
-defineSnapshotTestFromFixture(__dirname, transform, {}, 'reverse-identifiers');
+defineSnapshotTestFromFixture(
+  __dirname,
+  transformer,
+  {},
+  "reverse-identifiers"
+);

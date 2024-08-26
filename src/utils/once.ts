@@ -8,14 +8,15 @@
 /**
  * This replicates lodash's once functionality for our purposes.
  */
-module.exports = function(func) {
+export default function (func: any) {
   let called = false;
-  let result;
-  return function(...args) {
+  let result: any;
+  return function (this: never, ...args: any) {
     if (called) {
       return result;
     }
     called = true;
-    return result = func.apply(this, args);
+    result = func.apply(this, args);
+    return result;
   };
-};
+}

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -6,52 +5,52 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+"use strict";
 
-const babylon = require('@babel/parser');
+import babylon from "@babel/parser";
 
-const defaultOptions = {
-  sourceType: 'module',
+const defaultOptions: any = {
+  sourceType: "module",
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
   startLine: 1,
   tokens: true,
   plugins: [
-    ['flow', {all: true}],
-    'flowComments',
-    'jsx',
+    ["flow", { all: true }],
+    "flowComments",
+    "jsx",
 
-    'asyncGenerators',
-    'bigInt',
-    'classProperties',
-    'classPrivateProperties',
-    'classPrivateMethods',
-    ['decorators', {decoratorsBeforeExport: false}],
-    'doExpressions',
-    'dynamicImport',
-    'exportDefaultFrom',
-    'exportNamespaceFrom',
-    'functionBind',
-    'functionSent',
-    'importMeta',
-    'logicalAssignment',
-    'nullishCoalescingOperator',
-    'numericSeparator',
-    'objectRestSpread',
-    'optionalCatchBinding',
-    'optionalChaining',
-    ['pipelineOperator', {proposal: 'minimal'}],
-    'throwExpressions',
+    "asyncGenerators",
+    "bigInt",
+    "classProperties",
+    "classPrivateProperties",
+    "classPrivateMethods",
+    ["decorators", { decoratorsBeforeExport: false }],
+    "doExpressions",
+    "dynamicImport",
+    "exportDefaultFrom",
+    "exportNamespaceFrom",
+    "functionBind",
+    "functionSent",
+    "importMeta",
+    "logicalAssignment",
+    "nullishCoalescingOperator",
+    "numericSeparator",
+    "objectRestSpread",
+    "optionalCatchBinding",
+    "optionalChaining",
+    ["pipelineOperator", { proposal: "minimal" }],
+    "throwExpressions",
   ],
 };
 
 /**
  * Wrapper to set default options
  */
-module.exports = function(options=defaultOptions) {
+export default function (options = defaultOptions) {
   return {
-    parse(code) {
+    parse(code: any) {
       return babylon.parse(code, options);
     },
   };
-};
+}

@@ -11,7 +11,7 @@ import fs from "fs";
 import path from "path";
 import temp from "temp";
 
-function renameFileTo(
+export function renameFileTo(
   oldPath: string,
   newFilename: string,
   extension: string = ""
@@ -22,11 +22,17 @@ function renameFileTo(
   fs.renameSync(oldPath, newPath);
   return newPath;
 }
-
-function createTempFileWith(
+export function createTempFileWith(content: string): string;
+export function createTempFileWith(content: string, extension: string): string;
+export function createTempFileWith(
   content: string,
   filename: string | undefined,
   extension: string
+): string;
+export function createTempFileWith(
+  content: string,
+  filename?: string | undefined,
+  extension?: string
 ) {
   const info = temp.openSync({ suffix: extension });
   let filePath = info.path;
@@ -37,20 +43,17 @@ function createTempFileWith(
   }
   return filePath;
 }
-exports.createTempFileWith = createTempFileWith;
 
 // Test transform files need a js extension to work with @babel/register
 // .ts or .tsx work as well
-function createTransformWith(content: string, ext = ".js") {
+export function createTransformWith(content: string, ext = ".js") {
   return createTempFileWith(
     "module.exports = function(fileInfo, api, options) { " + content + " }",
     undefined,
     ext
   );
 }
-exports.createTransformWith = createTransformWith;
 
-function getFileContent(filePath: string) {
+export function getFileContent(filePath: string) {
   return fs.readFileSync(filePath).toString();
 }
-exports.getFileContent = getFileContent;
