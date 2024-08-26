@@ -9,7 +9,7 @@
 
 import intersection from "../intersection";
 
-function test(testCases: any) {
+function test<T, U>(testCases: Record<string, { input: T[][]; output: U }>) {
   for (const testName in testCases) {
     const testCase = testCases[testName];
     it(testName, function () {

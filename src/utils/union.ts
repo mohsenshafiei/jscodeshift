@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export default function (arrays: any) {
-  const result = new Set(arrays[0]);
+export function union<T>(arrays: T[][]): T[] {
+  const result = new Set<T>(arrays[0]);
 
-  let i, j, array;
+  let i: number, j: number, array: T[];
   for (i = 1; i < arrays.length; i++) {
     array = arrays[i];
     for (j = 0; j < array.length; j++) {
@@ -18,3 +18,5 @@ export default function (arrays: any) {
 
   return Array.from(result);
 }
+
+export default union;

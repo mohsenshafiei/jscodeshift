@@ -9,7 +9,16 @@
 
 import union from "../union";
 
-function test(testCases: any) {
+interface TestCase<T, U> {
+  input: T[][];
+  output: U[];
+}
+
+interface TestCases<T, U> {
+  [key: string]: TestCase<T, U>;
+}
+
+function test<T, U>(testCases: TestCases<T, U>) {
   for (const testName in testCases) {
     const testCase = testCases[testName];
     it(testName, function () {

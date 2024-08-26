@@ -8,15 +8,17 @@
 /**
  * This replicates lodash's once functionality for our purposes.
  */
-export default function (func: any) {
+export function once<T extends (...args: any[]) => any>(func: T): T {
   let called = false;
-  let result: any;
-  return function (this: never, ...args: any) {
+  let result: ReturnType<T>;
+  return function (this: never, ...args: Parameters<T>): ReturnType<T> {
     if (called) {
       return result;
     }
     called = true;
     result = func.apply(this, args);
     return result;
-  };
+  } as T;
 }
+
+export default once;
