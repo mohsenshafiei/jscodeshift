@@ -38,7 +38,7 @@ const globalMethods = {
    * @param {string} name
    * @return {Collection}
    */
-  findVariableDeclarators: function (name: string): Collection.CollectionType {
+  findVariableDeclarators: function (name: string): Collection.ICollection {
     const filter = name ? { id: { name: name } } : null;
     // @ts-ignore
     return this.find(VariableDeclarator, filter);

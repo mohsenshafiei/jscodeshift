@@ -9,8 +9,12 @@
 
 import assert from "assert";
 import intersection from "./utils/intersection";
-import recast from "recast";
+import * as recast from "recast";
 import union from "./utils/union";
+
+import * as ASTTypes from "ast-types/lib/types";
+import * as CollectionType from "./types/Collection";
+import { Options } from "./types/core";
 
 const astTypes = recast.types;
 var types = astTypes.namedTypes;
@@ -27,7 +31,7 @@ const Node = types.Node;
  * @mixes transformMethods
  * @mixes globalMethods
  */
-class Collection {
+class Collection<N> {
   /**
    * @param {Array} paths An array of AST paths
    * @param {Collection} parent A parent collection
@@ -63,7 +67,13 @@ class Collection {
    * @param {function} callback
    * @return {Collection}
    */
-  filter(callback: any) {
+  filter<S extends N>(
+    callback: (
+      path: CollectionType.ASTPath<N>,
+      i: number,
+      paths: Array<CollectionType.ASTPath<N>>
+    ) => path is CollectionType.ASTPath<S>
+  ) {
     // @ts-ignore
     return new this.constructor(this.__paths.filter(callback), this);
   }
@@ -74,7 +84,13 @@ class Collection {
    * @param {function} callback
    * @return {Collection} The collection itself
    */
-  forEach(callback: any) {
+  forEach(
+    callback: (
+      path: CollectionType.ASTPath<N>,
+      i: number,
+      paths: Array<CollectionType.ASTPath<N>>
+    ) => void
+  ) {
     this.__paths.forEach((path: any, i: any, paths: any) =>
       callback.call(path, path, i, paths)
     );
@@ -87,7 +103,13 @@ class Collection {
    * @param {function} callback
    * @return {boolean}
    */
-  some(callback: any) {
+  some(
+    callback: (
+      path: CollectionType.ASTPath<N>,
+      i: number,
+      paths: Array<CollectionType.ASTPath<N>>
+    ) => boolean
+  ) {
     return this.__paths.some((path: any, i: number, paths: any) =>
       callback.call(path, path, i, paths)
     );
@@ -99,7 +121,13 @@ class Collection {
    * @param {function} callback
    * @return {boolean}
    */
-  every(callback: any) {
+  every(
+    callback: (
+      path: CollectionType.ASTPath<N>,
+      i: number,
+      paths: Array<CollectionType.ASTPath<N>>
+    ) => boolean
+  ) {
     return this.__paths.every((path, i, paths) =>
       callback.call(path, path, i, paths)
     );
@@ -118,10 +146,22 @@ class Collection {
    * @param {function} callback
    * @param {Type} type Force the new collection to be of a specific type
    */
-  map(callback: any, type: any) {
+  map<T = ASTTypes.ASTNode>(
+    callback: (
+      path: CollectionType.ASTPath<N>,
+      i: number,
+      paths: Array<CollectionType.ASTPath<N>>
+    ) =>
+      | CollectionType.ASTPath<T>
+      | Array<CollectionType.ASTPath<T>>
+      | null
+      | undefined,
+    type: ASTTypes.Type<any>
+  ) {
     const paths: any = [];
     this.forEach(function (path: any) {
       /*jshint eqnull:true*/
+      // @ts-ignore
       let result = callback.apply(path, arguments);
       if (result == null) return;
       if (!Array.isArray(result)) {
@@ -141,7 +181,7 @@ class Collection {
    *
    * @return {number}
    */
-  size() {
+  size(): number {
     return this.__paths.length;
   }
 
@@ -150,7 +190,7 @@ class Collection {
    *
    * @return {number}
    */
-  get length() {
+  get length(): number {
     return this.__paths.length;
   }
 
@@ -159,22 +199,22 @@ class Collection {
    *
    * @return {Array}
    */
-  nodes() {
+  nodes(): N[] {
     return this.__paths.map((p) => p.value);
   }
 
-  paths() {
+  paths(): Array<CollectionType.ASTPath<N>> {
     return this.__paths;
   }
 
-  getAST() {
+  getAST(): Array<CollectionType.ASTPath<any>> {
     if (this._parent) {
       return this._parent.getAST();
     }
     return this.__paths;
   }
 
-  toSource(options: any) {
+  toSource(options: Options) {
     if (this._parent) {
       return this._parent.toSource(options);
     }
@@ -225,7 +265,7 @@ class Collection {
    *
    * @return {Array<string>}
    */
-  getTypes() {
+  getTypes(): string[] {
     return this._types;
   }
 
@@ -235,7 +275,7 @@ class Collection {
    * @param {Type} type
    * @return {boolean}
    */
-  isOfType(type: any) {
+  isOfType(type: ASTTypes.Type<any>): boolean {
     return !!type && this._types.indexOf(type.toString()) > -1;
   }
 }
@@ -270,6 +310,8 @@ function _inferTypes(paths: any) {
 
   return _types;
 }
+
+export type ICollection = typeof Collection;
 
 function _toTypeArray(value: any) {
   value = !Array.isArray(value) ? [value] : value;

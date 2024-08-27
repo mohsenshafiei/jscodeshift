@@ -11,21 +11,46 @@
 
 import fs from "fs";
 import path from "path";
+import { TestOptions } from "./types/testUtils";
+import { Options, Transform } from "./types/core";
+import jscodeshiftCore from "./core";
 
-function applyTransform(
-  module: any,
-  options: any,
-  input: any,
-  testOptions: any = {}
+function isTransformModule(
+  module: { default: Transform; parser: TestOptions["parser"] } | Transform
+): module is { default: Transform; parser: TestOptions["parser"] } {
+  return (module as { default: Transform }).default !== undefined;
+}
+
+export async function applyTransform(
+  module:
+    | {
+        default: Transform;
+        parser: TestOptions["parser"];
+      }
+    | Transform,
+  options: Options | null | undefined,
+  input: {
+    path?: string;
+    source: string;
+  },
+  testOptions?: TestOptions
 ) {
   // Handle ES6 modules using default export for the transform
-  const transform = module.default ? module.default : module;
+  const transform: Transform = isTransformModule(module)
+    ? module.default
+    : module;
 
   // Jest resets the module registry after each test, so we need to always get
   // a fresh copy of jscodeshift on every test run.
-  let jscodeshift = require("./core");
-  if (testOptions.parser || module.parser) {
-    jscodeshift = jscodeshift.withParser(testOptions.parser || module.parser);
+  let jscodeshift = jscodeshiftCore;
+  if (
+    (testOptions && testOptions.parser) ||
+    (isTransformModule(module) && module.parser)
+  ) {
+    jscodeshift = jscodeshift.withParser(
+      (testOptions && testOptions.parser) ||
+        (isTransformModule(module) && module.parser)
+    );
   }
 
   const output = transform(
@@ -34,33 +59,51 @@ function applyTransform(
       jscodeshift,
       j: jscodeshift,
       stats: () => {},
+      report: () => {},
     },
     options || {}
   );
 
   return (output || "").trim();
 }
-exports.applyTransform = applyTransform;
 
-function runSnapshotTest(module: any, options: any, input: any) {
+export function runSnapshotTest(
+  module:
+    | {
+        default: Transform;
+        parser: TestOptions["parser"];
+      }
+    | Transform,
+  options: Options,
+  input: {
+    path?: string;
+    source: string;
+  }
+) {
   const output = applyTransform(module, options, input);
   expect(output).toMatchSnapshot();
   return output;
 }
-exports.runSnapshotTest = runSnapshotTest;
 
-function runInlineTest(
-  module: any,
-  options: any,
-  input: any,
-  expectedOutput: any,
-  testOptions?: any
+export function runInlineTest(
+  module:
+    | {
+        default: Transform;
+        parser: TestOptions["parser"];
+      }
+    | Transform,
+  options: Options | null,
+  input: {
+    path?: string;
+    source: string;
+  },
+  expectedOutput: string,
+  testOptions?: TestOptions
 ) {
   const output = applyTransform(module, options, input, testOptions);
   expect(output).toEqual(expectedOutput.trim());
   return output;
 }
-exports.runInlineTest = runInlineTest;
 
 function extensionForParser(parser: any) {
   switch (parser) {
@@ -92,11 +135,11 @@ function extensionForParser(parser: any) {
  *   alongside the transform and __tests__ directory.
  */
 export function runTest(
-  dirName: any,
-  transformName: any,
-  options: any,
-  testFilePrefix: any,
-  testOptions: any = {}
+  dirName: string,
+  transformName: string,
+  options: Options | null,
+  testFilePrefix?: string,
+  testOptions?: TestOptions
 ) {
   if (!testFilePrefix) {
     testFilePrefix = transformName;
@@ -104,7 +147,9 @@ export function runTest(
 
   // Assumes transform is one level up from __tests__ directory
   const module = require(path.join(dirName, "..", transformName));
-  const extension = extensionForParser(testOptions.parser || module.parser);
+  const extension = extensionForParser(
+    (testOptions && testOptions.parser) || module.parser
+  );
   const fixtureDir = path.join(dirName, "..", "__testfixtures__");
   const inputPath = path.join(
     fixtureDir,
@@ -132,11 +177,11 @@ export function runTest(
  * jscodeshift transform.
  */
 export function defineTest(
-  dirName: any,
-  transformName: any,
-  options?: any,
-  testFilePrefix?: any,
-  testOptions?: any
+  dirName: string,
+  transformName: string,
+  options: Options | null,
+  testFilePrefix?: string,
+  testOptions?: TestOptions
 ) {
   const testName = testFilePrefix
     ? `transforms correctly using "${testFilePrefix}" data`
@@ -149,11 +194,16 @@ export function defineTest(
 }
 
 export function defineInlineTest(
-  module: any,
-  options: any,
-  input: any,
-  expectedOutput: any,
-  testName?: any
+  module:
+    | {
+        default: Transform;
+        parser: TestOptions["parser"];
+      }
+    | Transform,
+  options: Options,
+  input: string,
+  expectedOutput: string,
+  testName?: string
 ) {
   it(testName || "transforms correctly", () => {
     runInlineTest(
@@ -168,10 +218,15 @@ export function defineInlineTest(
 }
 
 export function defineSnapshotTest(
-  module: any,
-  options: any,
-  input: any,
-  testName: any
+  module:
+    | {
+        default: Transform;
+        parser: TestOptions["parser"];
+      }
+    | Transform,
+  options: Options,
+  input: string,
+  testName?: string
 ) {
   it(testName || "transforms correctly", () => {
     runSnapshotTest(module, options, {
@@ -184,14 +239,21 @@ export function defineSnapshotTest(
  * Handles file-loading boilerplates, using same defaults as defineTest
  */
 export function defineSnapshotTestFromFixture(
-  dirName: any,
-  module: any,
-  options: any,
-  testFilePrefix: any,
-  testName?: any,
+  dirName: string,
+  module:
+    | {
+        default: Transform;
+        parser: TestOptions["parser"];
+      }
+    | Transform,
+  options: Options,
+  testFilePrefix: string,
+  testName?: string,
   testOptions: any = {}
 ) {
-  const extension = extensionForParser(testOptions.parser || module.parser);
+  const extension = extensionForParser(
+    testOptions.parser || (isTransformModule(module) && module.parser)
+  );
   const fixtureDir = path.join(dirName, "..", "__testfixtures__");
   const inputPath = path.join(
     fixtureDir,

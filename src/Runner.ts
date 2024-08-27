@@ -16,6 +16,10 @@ import https from "https";
 import temp from "temp";
 import * as ignores from "./ignoreFiles";
 
+// Types
+import * as CoreTypes from "./types/core";
+import * as RunnerTypes from "./types/Runner";
+
 const availableCpus = Math.max(require("os").cpus().length - 1, 1);
 const CHUNK_SIZE = 50;
 
@@ -24,12 +28,15 @@ function lineBreak(str: string) {
 }
 
 const bufferedWrite = (function () {
-  const buffer: any = [];
+  const buffer: string[] = [];
   let buffering = false;
 
   process.stdout.on("drain", () => {
     if (!buffering) return;
-    while (buffer.length > 0 && process.stdout.write(buffer.shift()) !== false);
+    while (
+      buffer.length > 0 &&
+      process.stdout.write(buffer.shift() as string) !== false
+    );
     if (buffer.length === 0) {
       buffering = false;
     }
@@ -59,12 +66,12 @@ const log: any = {
   },
 };
 
-function report({ file, msg }: any) {
+function report({ file, msg }: RunnerTypes.ReportParams) {
   bufferedWrite(lineBreak(`${pc.bgBlue(pc.white(" REP "))}${file} ${msg}`));
 }
 
-function concatAll(arrays: any) {
-  const result = [];
+function concatAll<T>(arrays: T[][]): T[] {
+  const result: T[] = [];
   for (const array of arrays) {
     for (const element of array) {
       result.push(element);
@@ -73,7 +80,7 @@ function concatAll(arrays: any) {
   return result;
 }
 
-function showFileStats(fileStats: any) {
+function showFileStats(fileStats: RunnerTypes.FileCounters) {
   process.stdout.write(
     "Results: \n" +
       pc.red(fileStats.error + " errors\n") +
@@ -83,7 +90,7 @@ function showFileStats(fileStats: any) {
   );
 }
 
-function showStats(stats: any) {
+function showStats(stats: RunnerTypes.Stats) {
   const names = Object.keys(stats).sort();
   if (names.length) {
     process.stdout.write(pc.blue("Stats: \n"));
@@ -93,14 +100,18 @@ function showStats(stats: any) {
   );
 }
 
-function dirFiles(dir: any, callback: any, acc?: any): any {
+function dirFiles(
+  dir: string,
+  callback: (files: string[]) => void,
+  acc?: RunnerTypes.Accumulator
+): void {
   // acc stores files found so far and counts remaining paths to be processed
   acc = acc || { files: [], remaining: 1 };
 
   function done() {
     // decrement count and return if there are no more paths left to process
-    if (!--acc.remaining) {
-      callback(acc.files);
+    if (!--acc!.remaining) {
+      if (acc) callback(acc.files);
     }
   }
 
@@ -134,11 +145,14 @@ function dirFiles(dir: any, callback: any, acc?: any): any {
   });
 }
 
-function getAllFiles(paths: any, filter: any) {
+function getAllFiles(
+  paths: string[],
+  filter: (file: string) => boolean
+): Promise<string[]> {
   return Promise.all(
     paths.map(
-      (file: any) =>
-        new Promise((resolve) => {
+      (file) =>
+        new Promise<string[]>((resolve) => {
           fs.lstat(file, (err, stat) => {
             if (err) {
               process.stderr.write(
@@ -149,7 +163,7 @@ function getAllFiles(paths: any, filter: any) {
             }
 
             if (stat.isDirectory()) {
-              dirFiles(file, (list: any) => resolve(list.filter(filter)));
+              dirFiles(file, (list) => resolve(list.filter(filter)));
             } else if (!filter(file) || ignores.shouldIgnore(file)) {
               // ignoring the file
               resolve([]);
@@ -162,16 +176,25 @@ function getAllFiles(paths: any, filter: any) {
   ).then(concatAll);
 }
 
-function run(transformFile: any, paths: any, options: any) {
+function run(
+  transformFile: string,
+  paths: string[],
+  options: CoreTypes.Options
+) {
   let usedRemoteScript = false;
   const cpus = options.cpus
     ? Math.min(availableCpus, options.cpus)
     : availableCpus;
   const extensions =
     options.extensions &&
-    options.extensions.split(",").map((ext: any) => "." + ext);
-  const fileCounters: any = { error: 0, ok: 0, nochange: 0, skip: 0 };
-  const statsCounter: any = {};
+    options.extensions.split(",").map((ext: string) => "." + ext);
+  const fileCounters: RunnerTypes.FileCounters = {
+    error: 0,
+    ok: 0,
+    nochange: 0,
+    skip: 0,
+  };
+  const statsCounter: RunnerTypes.StatsCounter = {};
   const startTime = process.hrtime();
 
   ignores.add(options.ignoreSet);
@@ -225,7 +248,7 @@ function run(transformFile: any, paths: any, options: any) {
     return transform(transformFile);
   }
 
-  function transform(transformFile: any) {
+  function transform(transformFile: string) {
     return getAllFiles(
       paths,
       (name: string) =>
@@ -283,23 +306,31 @@ function run(transformFile: any, paths: any, options: any) {
 
         return workers.map((child) => {
           child.send({ files: next(), options });
-          child.on("message", (message: any) => {
+          child.on("message", (message: RunnerTypes.Message) => {
             switch (message.action) {
               case "status":
-                fileCounters[message.status] += 1;
-                log[message.status](lineBreak(message.msg), options.verbose);
+                if (message.status && message.msg) {
+                  fileCounters[message.status] += 1;
+                  log[message.status](lineBreak(message.msg), options.verbose!);
+                }
                 break;
               case "update":
-                if (!statsCounter[message.name]) {
-                  statsCounter[message.name] = 0;
+                if (message.name && message.quantity !== undefined) {
+                  statsCounter[message.name] =
+                    (statsCounter[message.name] || 0) + message.quantity;
                 }
-                statsCounter[message.name] += message.quantity;
                 break;
               case "free":
                 child.send({ files: next(), options });
                 break;
               case "report":
-                report(message);
+                if (message.status && message.file && message.msg) {
+                  report({
+                    status: message.status,
+                    file: message.file,
+                    msg: message.msg,
+                  });
+                }
                 break;
             }
           });

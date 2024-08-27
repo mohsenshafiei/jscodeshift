@@ -10,7 +10,7 @@
 /*global jest, describe, it, expect*/
 
 import core from "../core";
-import recast from "recast";
+import * as recast from "recast";
 const b = recast.types.builders;
 const NodePath = recast.types.NodePath;
 
@@ -21,11 +21,13 @@ describe("core API", function () {
 
   it("returns a Collection from an AST node", function () {
     const node = b.identifier("foo");
+    // @ts-ignore
     expect(core(node).constructor.name).toContain("Collection");
   });
 
   it("returns a Collection from an array of AST nodes", function () {
     const node = b.identifier("foo");
+    // @ts-ignore
     expect(core([node]).constructor.name).toContain("Collection");
   });
 
@@ -44,7 +46,9 @@ describe("core API", function () {
   });
 
   it("throws if it gets an invalid value", function () {
+    // @ts-ignore
     expect(() => core(42)).toThrow();
+    // @ts-ignore
     expect(() => core({})).toThrow();
   });
 

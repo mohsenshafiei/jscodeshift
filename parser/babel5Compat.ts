@@ -59,6 +59,7 @@ const options: ParserOptions = {
 export default function () {
   return {
     parse(code: string) {
+      // @ts-ignore
       return babylon.parse(code, options);
     },
   };

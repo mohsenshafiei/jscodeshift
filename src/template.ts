@@ -7,16 +7,25 @@
 
 "use strict";
 
-import recast from "recast";
+import * as recast from "recast";
+import * as CoreTypes from "./types/core";
+import { NodeWithLocation } from "./types/template";
 
 const builders = recast.types.builders;
 const types = recast.types.namedTypes;
 
-function splice(arr: any, element: any, replacement: any) {
-  arr.splice.apply(arr, [arr.indexOf(element), 1].concat(replacement));
+function splice<T>(arr: T[], element: T, replacement: T | T[]): void {
+  const index = arr.indexOf(element);
+  if (index !== -1) {
+    arr.splice(
+      index,
+      1,
+      ...(Array.isArray(replacement) ? replacement : [replacement])
+    );
+  }
 }
 
-function cleanLocation(node: any) {
+function cleanLocation(node: NodeWithLocation) {
   delete node.start;
   delete node.end;
   delete node.loc;
@@ -87,7 +96,12 @@ function getVistor(varNames: any, nodes: any) {
   };
 }
 
-function replaceNodes(src: any, varNames: any, nodes: any, parser: any) {
+function replaceNodes(
+  src: string,
+  varNames: any,
+  nodes: CoreTypes.ASTNode,
+  parser: CoreTypes.Parser
+) {
   const ast = recast.parse(src, { parser });
   recast.visit(ast, getVistor(varNames, nodes));
   return ast;
@@ -98,7 +112,7 @@ function getUniqueVarName() {
   return `$jscodeshift${varNameCounter++}$`;
 }
 
-export function withParser(parser: any) {
+export function withParser(parser: CoreTypes.Parser) {
   function statements(template: any /*, ...nodes*/) {
     template = Array.from(template);
     const nodes: any = Array.from(arguments).slice(1);

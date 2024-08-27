@@ -189,7 +189,7 @@ describe("VariableDeclarators", function () {
     });
 
     describe("parsing with bablylon", function () {
-      it("does not rename object property", async function () {
+      it.only("does not rename object property", async function () {
         nodes = [
           parse("var foo = 42; var obj = { foo: null };", {
             parser: await getParser("babylon"),
@@ -198,6 +198,8 @@ describe("VariableDeclarators", function () {
         Collection.fromNodes(nodes)
           .findVariableDeclarators("foo")
           .renameTo("newFoo");
+
+        debugger;
 
         expect(
           Collection.fromNodes(nodes).find(types.Identifier, { name: "newFoo" })

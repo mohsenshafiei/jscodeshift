@@ -13,8 +13,11 @@ import * as Collection from "./Collection";
 import collections from "./collections";
 import getParser from "./getParser";
 import { matchNode } from "./matchNode";
-import recast from "recast";
+import * as recast from "recast";
 import * as template from "./template";
+
+import { Options } from "./types/core";
+import * as CoreTypes from "./types/core";
 
 const Node = recast.types.namedTypes.Node;
 const NodePath = recast.types.NodePath;
@@ -40,7 +43,7 @@ for (var name in collections) {
  * @param {Object} options Options to pass to Recast when passing source code
  * @return {Collection}
  */
-function core(source: any, options: any) {
+function core(source: string, options: Options) {
   return typeof source === "string"
     ? fromSource(source, options)
     : fromAST(source);
@@ -54,7 +57,7 @@ function core(source: any, options: any) {
  * @param {Node|NodePath|Array} source
  * @return {Collection}
  */
-function fromAST(ast: any) {
+function fromAST(ast: CoreTypes.ASTNode | CoreTypes.ASTNode[]) {
   if (Array.isArray(ast)) {
     if (ast[0] instanceof NodePath || ast.length === 0) {
       return Collection.fromPaths(ast);
@@ -73,7 +76,7 @@ function fromAST(ast: any) {
   );
 }
 
-function fromSource(source: any, options: any) {
+function fromSource(source: string, options: Options) {
   if (!options) {
     options = {};
   }
@@ -102,7 +105,7 @@ function match(path: any, filter: any) {
   return matchNode(path.value, filter);
 }
 
-const plugins: any = [];
+const plugins: CoreTypes.Plugin[] = [];
 
 /**
  * Utility function for registering plugins.
@@ -129,21 +132,18 @@ function use(plugin: any) {
  * @augments core
  * @static
  */
-export function withParser(parser: any) {
-  if (typeof parser === "string") {
-    parser = getParser(parser);
-  }
+export function withParser(
+  parser: string | CoreTypes.Parser
+): CoreTypes.JSCodeshift {
+  const resolvedParser =
+    typeof parser === "string" ? getParser(parser) : parser;
 
-  const newCore = function (source: any, options: any) {
-    if (options && !options.parser) {
-      options.parser = parser;
-    } else {
-      options = { parser };
-    }
+  const newCore = (source: string, options: Options = {}) => {
+    options.parser = options.parser || resolvedParser;
     return core(source, options);
   };
 
-  return enrichCore(newCore, parser);
+  return enrichCore(newCore as any, resolvedParser);
 }
 
 /**
@@ -152,7 +152,7 @@ export function withParser(parser: any) {
  * @see {@link https://github.com/benjamn/ast-types}
  */
 
-function enrichCore(core: any, parser: any) {
+function enrichCore(core: CoreTypes.JSCodeshift, parser: CoreTypes.Parser) {
   // add builders and types to the function for simple access
   Object.assign(core, recast.types.namedTypes);
   Object.assign(core, recast.types.builders);
@@ -163,6 +163,7 @@ function enrichCore(core: any, parser: any) {
    */
   core.types = recast.types;
   core.match = match;
+  // @ts-ignore
   core.template = template.withParser(parser);
 
   // add mappings and filters to function
@@ -170,9 +171,11 @@ function enrichCore(core: any, parser: any) {
   core.mappings = {};
   for (const name in collections) {
     if (collections[name].filters) {
+      // @ts-ignore
       core.filters[name] = collections[name].filters;
     }
     if (collections[name].mappings) {
+      // @ts-ignore
       core.mappings[name] = collections[name].mappings;
     }
   }
@@ -181,4 +184,4 @@ function enrichCore(core: any, parser: any) {
   return core;
 }
 
-export default enrichCore(core, getParser());
+export default enrichCore(core as any, getParser());
