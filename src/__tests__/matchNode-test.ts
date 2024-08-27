@@ -14,10 +14,25 @@ import { matchNode } from "../matchNode";
 describe("matchNode", function () {
   beforeEach(function () {
     expect.extend({
-      toMatchNode: function (haystack: any, needle: any): any {
-        const result: any = {};
-        result.pass = matchNode(haystack, needle);
-        return result;
+      toMatchNode<T>(haystack: T, needle: T) {
+        const pass = matchNode(haystack, needle);
+        if (pass) {
+          return {
+            pass: true,
+            message: () =>
+              `Expected ${JSON.stringify(
+                haystack
+              )} not to match node ${JSON.stringify(needle)}`,
+          };
+        } else {
+          return {
+            pass: false,
+            message: () =>
+              `Expected ${JSON.stringify(
+                haystack
+              )} to match node ${JSON.stringify(needle)}`,
+          };
+        }
       },
     });
   });

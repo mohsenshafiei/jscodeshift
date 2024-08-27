@@ -7,32 +7,31 @@
 
 "use strict";
 
-const hasOwn = Object.prototype.hasOwnProperty.call.bind(
-  Object.prototype.hasOwnProperty
-);
+function hasOwn(obj: object, key: string | symbol | number): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
 
-/**
- * Checks whether needle is a strict subset of haystack.
- *
- * @param {*} haystack Value to test.
- * @param {*} needle Test function or value to look for in `haystack`.
- * @return {bool}
- */
-export function matchNode(haystack: any, needle: any): any {
+function isNode(value: any): value is object {
+  return value !== null && typeof value === "object";
+}
+
+export function matchNode<T>(haystack: T, needle: T): boolean {
   if (typeof needle === "function") {
-    return needle(haystack);
+    return (needle as (value: T) => boolean)(haystack);
   }
+
   if (isNode(needle) && isNode(haystack)) {
-    return Object.keys(needle).every(function (property) {
+    return Object.keys(needle).every((property) => {
       return (
         hasOwn(haystack, property) &&
-        matchNode(haystack[property], needle[property])
+        matchNode((haystack as any)[property], (needle as any)[property])
       );
     });
   }
-  return haystack === needle;
-}
 
-function isNode(value: any) {
-  return typeof value === "object" && value;
+  if (typeof haystack === typeof needle) {
+    return haystack === needle;
+  }
+
+  return false;
 }
