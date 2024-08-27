@@ -7,19 +7,24 @@
 
 "use strict";
 
-export function getParser(parserName?: any, options?: any) {
+import type { Parser } from "./types/core";
+
+export async function getParser(
+  parserName?: string,
+  options?: any
+): Promise<Parser> {
   switch (parserName) {
     case "babylon":
-      return require("../parser/babylon")(options);
+      return (await import("../parser/babylon")).default(options);
     case "flow":
-      return require("../parser/flow")(options);
+      return (await import("../parser/flow")).default(options);
     case "ts":
-      return require("../parser/ts")(options);
+      return (await import("../parser/ts")).default();
     case "tsx":
-      return require("../parser/tsx")(options);
+      return (await import("../parser/tsx")).default();
     case "babel":
     default:
-      return require("../parser/babel5Compat")(options);
+      return (await import("../parser/babel5Compat")).default();
   }
 }
 
