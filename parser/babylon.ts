@@ -64,7 +64,7 @@ const defaultOptions: ParserOptions = {
 export default function (options: ParserOptions = defaultOptions) {
   return {
     parse(code: string) {
-      return babylon.parse(code, options);
+      return babylon.parse(code, options as any);
     },
   };
 }
