@@ -7,9 +7,24 @@
 
 "use strict";
 
-import babylon from "@babel/parser";
+import * as babylon from "@babel/parser";
 
-const defaultOptions: any = {
+interface ParserPluginOptions {
+  all?: boolean;
+  decoratorsBeforeExport?: boolean;
+  proposal?: string;
+}
+
+interface ParserOptions {
+  sourceType: "module";
+  allowImportExportEverywhere: boolean;
+  allowReturnOutsideFunction: boolean;
+  startLine: number;
+  tokens: boolean;
+  plugins: (string | [string, ParserPluginOptions])[];
+}
+
+const defaultOptions: ParserOptions = {
   sourceType: "module",
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
@@ -19,7 +34,6 @@ const defaultOptions: any = {
     ["flow", { all: true }],
     "flowComments",
     "jsx",
-
     "asyncGenerators",
     "bigInt",
     "classProperties",
@@ -47,9 +61,9 @@ const defaultOptions: any = {
 /**
  * Wrapper to set default options
  */
-export default function (options = defaultOptions) {
+export default function (options: ParserOptions = defaultOptions) {
   return {
-    parse(code: any) {
+    parse(code: string) {
       return babylon.parse(code, options);
     },
   };

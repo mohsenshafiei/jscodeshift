@@ -10,7 +10,19 @@
 // @ts-ignore
 import flowParser from "flow-parser";
 
-const defaultOptions = {
+interface FlowParserOptions {
+  enums: boolean;
+  esproposal_class_instance_fields: boolean;
+  esproposal_class_static_fields: boolean;
+  esproposal_decorators: boolean;
+  esproposal_export_star_as: boolean;
+  esproposal_optional_chaining: boolean;
+  esproposal_nullish_coalescing: boolean;
+  tokens: boolean;
+  types: boolean;
+}
+
+const defaultOptions: FlowParserOptions = {
   enums: true,
   esproposal_class_instance_fields: true,
   esproposal_class_static_fields: true,
@@ -25,9 +37,9 @@ const defaultOptions = {
 /**
  * Wrapper to set default options
  */
-export default function (options = defaultOptions) {
+export default function (options: FlowParserOptions = defaultOptions) {
   return {
-    parse(code: any) {
+    parse(code: string) {
       return flowParser.parse(code, options);
     },
   };

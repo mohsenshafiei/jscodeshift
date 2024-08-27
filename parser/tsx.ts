@@ -7,7 +7,7 @@
 
 "use strict";
 
-import babylon from "@babel/parser";
+import * as babylon from "@babel/parser";
 import baseOptions from "./tsOptions";
 
 const options: any = Object.assign({}, baseOptions);

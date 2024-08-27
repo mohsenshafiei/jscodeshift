@@ -10,7 +10,7 @@
 /**
  * Options shared by the TypeScript and TSX parsers.
  */
-export default {
+const tsOptions: babel.ParserOptions = {
   sourceType: "module",
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
@@ -27,6 +27,7 @@ export default {
     "doExpressions",
     "dynamicImport",
     "exportDefaultFrom",
+    // @ts-ignore
     "exportExtensions",
     "exportNamespaceFrom",
     "functionBind",
@@ -43,3 +44,5 @@ export default {
     "typescript",
   ],
 };
+
+export default tsOptions;

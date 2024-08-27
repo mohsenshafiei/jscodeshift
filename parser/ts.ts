@@ -7,7 +7,7 @@
 
 "use strict";
 
-import babylon from "@babel/parser";
+import * as babylon from "@babel/parser";
 import options from "./tsOptions";
 
 /**
@@ -16,8 +16,8 @@ import options from "./tsOptions";
  */
 export default function () {
   return {
-    parse(code: any) {
-      return babylon.parse(code, options as any);
+    parse(code: string) {
+      return babylon.parse(code, options);
     },
   };
 }

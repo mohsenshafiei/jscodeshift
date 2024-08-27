@@ -7,11 +7,27 @@
 
 "use strict";
 
-import babylon from "@babel/parser";
+import * as babylon from "@babel/parser";
 
 // These are the options that were the default of the Babel5 parse function
 // see https://github.com/babel/babel/blob/5.x/packages/babel/src/api/node.js#L81
-const options: any = {
+
+interface ParserPluginOptions {
+  decoratorsBeforeExport?: boolean;
+}
+
+interface ParserOptions {
+  sourceType: "module";
+  allowHashBang: boolean;
+  ecmaVersion: number;
+  allowImportExportEverywhere: boolean;
+  allowReturnOutsideFunction: boolean;
+  startLine: number;
+  tokens: boolean;
+  plugins: (string | [string, ParserPluginOptions])[];
+}
+
+const options: ParserOptions = {
   sourceType: "module",
   allowHashBang: true,
   ecmaVersion: Infinity,
@@ -42,7 +58,7 @@ const options: any = {
  */
 export default function () {
   return {
-    parse(code: any) {
+    parse(code: string) {
       return babylon.parse(code, options);
     },
   };
