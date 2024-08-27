@@ -5,15 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-function throwError(exitCode: any, message: any, helpText?: any) {
-  const error: any = new Error(
+import { Options } from "./types/core";
+
+function throwError(
+  exitCode: number,
+  message: string,
+  helpText?: string
+): never {
+  const error = new Error(
     helpText ? `${message}\n\n---\n\n${helpText}` : message
-  );
+  ) as Error & { exitCode: number };
+
   error.exitCode = exitCode;
   throw error;
 }
 
-function formatOption(option: any) {
+function formatOption(option: Options) {
   let text = "  ";
   text += option.abbr ? `-${option.abbr}, ` : "    ";
   text += `--${option.flag ? "(no-)" : ""}${option.full}`;
@@ -47,7 +54,7 @@ function formatOption(option: any) {
   return text;
 }
 
-function getHelpText(options: any) {
+function getHelpText(options: Options) {
   const opts = Object.keys(options)
     .map((k) => options[k])
     .sort((a, b) => a.display_index - b.display_index);
@@ -70,7 +77,7 @@ ${opts.map(formatOption).join("\n")}
   return text.trimLeft();
 }
 
-function validateOptions(parsedOptions: any, options: any) {
+function validateOptions(parsedOptions: Options, options: Options) {
   const errors = [];
   for (const optionName in options) {
     const option = options[optionName];
@@ -87,7 +94,7 @@ function validateOptions(parsedOptions: any, options: any) {
   }
 }
 
-function prepareOptions(options: any) {
+function prepareOptions(options: Options) {
   options.help = {
     display_index: 5,
     abbr: "h",
@@ -97,7 +104,7 @@ function prepareOptions(options: any) {
     },
   };
 
-  const preparedOptions: any = {};
+  const preparedOptions: Options = {};
 
   for (const optionName of Object.keys(options)) {
     const option = options[optionName];
@@ -118,15 +125,15 @@ function prepareOptions(options: any) {
   return preparedOptions;
 }
 
-function isOption(value: any) {
+function isOption(value: string): boolean {
   return /^--?/.test(value);
 }
 
-function parse(options: any, args = process.argv.slice(2)) {
+function parse(options: Options, args = process.argv.slice(2)) {
   const missingValue = Symbol();
   const preparedOptions = prepareOptions(options);
 
-  const parsedOptions: any = {};
+  const parsedOptions: Options = {};
   const positionalArguments = [];
 
   for (const optionName in options) {
@@ -172,7 +179,7 @@ function parse(options: any, args = process.argv.slice(2)) {
             value === null &&
             isOption(args[i + 1]),
           list: isList,
-          process(value: any) {
+          process(value: string) {
             // Try to parse values as JSON to be compatible with nomnom
             try {
               return JSON.parse(value);
@@ -261,9 +268,9 @@ export default {
    *   - callback: If option is supplied, call this function and exit
    *   - process: Pre-process value before returning it
    */
-  options(options: any) {
+  options(options: Options) {
     return {
-      parse(args: any) {
+      parse(args: string[]) {
         return parse(options, args);
       },
       getHelpText() {
