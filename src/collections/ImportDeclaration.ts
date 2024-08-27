@@ -12,7 +12,7 @@ import * as NodeCollection from "./Node";
 
 import assert from "assert";
 import once from "../utils/once";
-import recast from "recast";
+import * as recast from "recast";
 
 const types = recast.types.namedTypes;
 

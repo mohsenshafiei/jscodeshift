@@ -7,22 +7,23 @@
 
 "use strict";
 
-import getParser from "./../../getParser";
+import * as recast from "recast";
+import * as CollectionModule from "../../Collection";
+import * as JSXElement from "../JSXElement";
+import getParser from "../../getParser";
 
 describe("JSXCollection API", function () {
   let nodes: any;
   let Collection: any;
   let JSXElementCollection: any;
-  let recast: any;
   let types: any;
   let b: any;
 
-  beforeEach(function () {
+  beforeEach(async function () {
     jest.resetModules();
 
-    Collection = require("../../Collection");
-    JSXElementCollection = require("../JSXElement");
-    recast = require("recast");
+    Collection = CollectionModule;
+    JSXElementCollection = JSXElement;
     types = recast.types.namedTypes;
     b = recast.types.builders;
 
@@ -41,7 +42,7 @@ describe("JSXCollection API", function () {
           '  {"foo"}',
           "</FooBar>",
         ].join("\n"),
-        { parser: getParser() }
+        { parser: await getParser() }
       ).program,
     ];
   });

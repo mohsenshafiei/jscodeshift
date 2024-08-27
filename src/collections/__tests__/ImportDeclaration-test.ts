@@ -7,22 +7,23 @@
 
 "use strict";
 
-import getParser from "./../../getParser";
+import * as recast from "recast";
+import * as CollectionModule from "../../Collection";
+import * as ImportDeclaration from "../ImportDeclaration";
+import getParser from "../../getParser";
 
 describe("ImportDeclaration API", function () {
   let nodes: any;
   let Collection: any;
   let ImportDeclarationCollection: any;
-  let recast: any;
   let types: any;
   let b: any;
 
-  beforeEach(function () {
+  beforeEach(async function () {
     jest.resetModules();
 
-    Collection = require("../../Collection");
-    ImportDeclarationCollection = require("../ImportDeclaration");
-    recast = require("recast");
+    Collection = CollectionModule;
+    ImportDeclarationCollection = ImportDeclaration;
     types = recast.types.namedTypes;
     b = recast.types.builders;
 
@@ -35,7 +36,7 @@ describe("ImportDeclaration API", function () {
           'import Foo, { Bar, Baz } from "@meta/foo";',
           'import { Bar as Burger } from "@meta/bar";',
         ].join("\n"),
-        { parser: getParser() }
+        { parser: await getParser() }
       ).program,
     ];
   });

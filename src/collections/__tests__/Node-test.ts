@@ -7,20 +7,23 @@
 
 "use strict";
 
+import * as recast from "recast";
+import * as NodeModule from "../Node";
+import * as CollectionModule from "../../Collection";
+import getParser from "../../getParser";
+
 describe("Collection API", function () {
   let ast: any;
   let Collection: any;
   let NodeCollection: any;
-  let recast: any;
   let types: any;
   let b: any;
 
-  beforeEach(function () {
+  beforeEach(async function () {
     jest.resetModules();
 
-    Collection = require("../../Collection");
-    NodeCollection = require("../Node");
-    recast = require("recast");
+    Collection = CollectionModule;
+    NodeCollection = NodeModule;
 
     types = recast.types.namedTypes;
     b = recast.types.builders;

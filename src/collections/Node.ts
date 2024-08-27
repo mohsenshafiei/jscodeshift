@@ -11,7 +11,7 @@ import * as Collection from "../Collection";
 
 import { matchNode } from "../matchNode";
 import once from "../utils/once";
-import recast from "recast";
+import * as recast from "recast";
 
 const Node = recast.types.namedTypes.Node;
 var types = recast.types.namedTypes;

@@ -18,11 +18,9 @@ describe("VariableDeclarators", function () {
   let nodes: any;
   let Collection: any;
   let VariableDeclaratorCollection: any;
-  let CPt: any;
 
   beforeEach(async function () {
     Collection = CollectionModule;
-    CPt = CollectionModule.CPt;
     VariableDeclaratorCollection = VariableDeclarator;
     types = recast.types.namedTypes;
 
