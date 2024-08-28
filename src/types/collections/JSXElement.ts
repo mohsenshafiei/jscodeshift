@@ -2,7 +2,7 @@ import * as astTypes from "ast-types";
 import * as nodePath from "ast-types/lib/node-path";
 import * as Collection from "../Collection";
 
-type ASTPath<N> = nodePath.NodePath<N, N>;
+export type ASTPath<N> = nodePath.NodePath<N, N>;
 export type JSXElement = astTypes.namedTypes.JSXElement;
 
 export interface GlobalMethods {
@@ -20,7 +20,7 @@ export interface TraversalMethods {
   childElements(): Collection.Collection<JSXElement>;
 }
 
-interface Filter {
+export interface Filter {
   (path: ASTPath<any>): boolean;
 }
 

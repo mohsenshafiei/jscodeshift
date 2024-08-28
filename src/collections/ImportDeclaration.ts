@@ -56,13 +56,12 @@ const globalMethods = {
    * @param {string} sourcePath
    * @return {Collection}
    */
-  findImportDeclarations: function (sourcePath: any): any {
+  findImportDeclarations: function (this: any, sourcePath: any): any {
     assert.ok(
       sourcePath && typeof sourcePath === "string",
       "findImportDeclarations(...) needs a source path"
     );
 
-    // @ts-ignore
     return this.find(types.ImportDeclaration, {
       source: { value: sourcePath },
     });

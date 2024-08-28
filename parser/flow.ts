@@ -7,7 +7,6 @@
 
 "use strict";
 
-// @ts-ignore
 import flowParser from "flow-parser";
 
 interface FlowParserOptions {

@@ -14,7 +14,7 @@ import union from "./utils/union";
 
 import * as ASTTypes from "ast-types/lib/types";
 import * as CollectionType from "./types/Collection";
-import { Options } from "./types/core";
+import { JSCodeshift, Options } from "./types/core";
 
 const astTypes = recast.types;
 var types = astTypes.namedTypes;
@@ -40,9 +40,9 @@ class Collection<N> {
    * @return {Collection}
    */
 
-  public __paths: any[];
+  public __paths: Array<CollectionType.ASTPath<N>>;
   private _parent: any;
-  private _types: any;
+  private _types: Array<ASTTypes.Type<any>> | undefined;
 
   constructor(
     paths: Array<CollectionType.ASTPath<N>>,
@@ -170,13 +170,12 @@ class Collection<N> {
       | undefined,
     type: ASTTypes.Type<any>
   ) {
-    const paths: Array<CollectionType.ASTPath<N>> = [];
+    const paths: Array<CollectionType.ASTPath<T>> = [];
     this.forEach(function (path: CollectionType.ASTPath<N>) {
       /*jshint eqnull:true*/
-      // @ts-ignore
       let result:
-        | CollectionType.ASTPath<N>
-        | Array<CollectionType.ASTPath<N>>
+        | CollectionType.ASTPath<T>
+        | Array<CollectionType.ASTPath<T>>
         | null
         // @ts-ignore
         | undefined = callback.apply(path, arguments);
@@ -231,14 +230,16 @@ class Collection<N> {
     return this.__paths;
   }
 
-  toSource(options: Options) {
+  toSource(this: JSCodeshift, options: Options) {
     if (this._parent) {
       return this._parent.toSource(options);
     }
     if (this.__paths.length === 1) {
       return recast.print(this.__paths[0], options).code;
     } else {
-      return this.__paths.map((p) => recast.print(p, options).code);
+      return this.__paths.map(
+        (p: CollectionType.ASTPath<N>) => recast.print(p as any, options).code
+      );
     }
   }
 
@@ -273,6 +274,8 @@ class Collection<N> {
           'Instead, check the "length" property first to verify at least 1 path exists.'
       );
     }
+
+    // @ts-ignore
     return path.get.apply(path, arguments);
   }
 
@@ -282,7 +285,7 @@ class Collection<N> {
    *
    * @return {Array<string>}
    */
-  getTypes(): string[] {
+  getTypes(): ASTTypes.Type<any>[] | undefined {
     return this._types;
   }
 
@@ -292,8 +295,10 @@ class Collection<N> {
    * @param {Type} type
    * @return {boolean}
    */
-  isOfType(type: ASTTypes.Type<any>): boolean {
-    return !!type && this._types.indexOf(type.toString()) > -1;
+  isOfType(type: ASTTypes.Type<any>): boolean | undefined {
+    return (
+      !!type && this._types && this._types.indexOf(type.toString() as any) > -1
+    );
   }
 }
 
@@ -304,7 +309,7 @@ class Collection<N> {
  * @return {Type} type An AST type
  */
 function _inferTypes<N>(paths: Array<CollectionType.ASTPath<N>>) {
-  let _types: any = [];
+  let _types: Array<ASTTypes.Type<any>> = [];
 
   if (paths.length > 0 && Node.check(paths[0].node)) {
     // @ts-ignore
@@ -321,8 +326,11 @@ function _inferTypes<N>(paths: Array<CollectionType.ASTPath<N>>) {
       );
     } else {
       // try to find a common type
+      // @ts-ignore
       _types = intersection(
-        paths.map((path: any) => astTypes.getSupertypeNames(path.node.type))
+        paths.map((path: CollectionType.ASTPath<any>) =>
+          astTypes.getSupertypeNames(path.node.type)
+        )
       );
     }
   }
@@ -522,7 +530,7 @@ export function hasConflictingRegistration(methodName: any, type: any) {
   });
 }
 
-var _defaultType: string[] = [];
+var _defaultType: Array<ASTTypes.Type<any>> | undefined = [];
 
 /**
  * Sets the default collection type. In case a collection is created form an

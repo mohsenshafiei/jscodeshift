@@ -13,6 +13,10 @@ import * as NodeCollection from "./Node";
 import assert from "assert";
 import once from "../utils/once";
 import * as recast from "recast";
+import { Filters, JSCodeshift } from "../types/core";
+
+import * as CollectionType from "../types/Collection";
+import * as JSXElementType from "../types/collections/JSXElement";
 const requiresModule = require("./VariableDeclarator").filters.requiresModule;
 
 const types = recast.types.namedTypes;
@@ -31,9 +35,11 @@ const globalMethods = {
    * @param {string} name
    * @return {Collection}
    */
-  findJSXElements: function (name: any): any {
+  findJSXElements: function (
+    this: JSCodeshift,
+    name: string
+  ): CollectionType.Collection<JSXElementType.JSXElement> {
     const nameFilter = name && { openingElement: { name: { name: name } } };
-    // @ts-ignore
     return this.find(JSXElement, nameFilter);
   },
 
@@ -46,16 +52,18 @@ const globalMethods = {
    * findJSXElementsByModuleName('Foo') will find <Bar />, without having to
    * know the variable name.
    */
-  findJSXElementsByModuleName: function (moduleName: any): any {
+  findJSXElementsByModuleName: function (
+    this: JSCodeshift,
+    moduleName: string
+  ): CollectionType.Collection<JSXElementType.JSXElement> {
     assert.ok(
       moduleName && typeof moduleName === "string",
       "findJSXElementsByModuleName(...) needs a name to look for"
     );
 
-    // @ts-ignore
     return this.find(types.VariableDeclarator)
       .filter(requiresModule(moduleName))
-      .map(function (path: any) {
+      .map(function (path: JSXElementType.ASTPath<any>) {
         const id = path.value.id.name;
         if (id) {
           return (
@@ -77,7 +85,9 @@ const filterMethods = {
    * @param {Object} attributeFilter
    * @return {function}
    */
-  hasAttributes: function (attributeFilter: any) {
+  hasAttributes: function (attributeFilter: {
+    [attributeName: string]: any;
+  }): JSXElementType.Filter {
     const attributeNames = Object.keys(attributeFilter);
     return function filter(path: any) {
       if (!JSXElement.check(path.value)) {
@@ -124,7 +134,7 @@ const filterMethods = {
    * @param {string} name
    * @return {function}
    */
-  hasChildren: function (name: any) {
+  hasChildren: function (name: string): JSXElementType.Filter {
     return function filter(path: any) {
       return (
         JSXElement.check(path.value) &&
@@ -147,10 +157,9 @@ const traversalMethods = {
    *
    * @return {Collection}
    */
-  childNodes: function () {
+  childNodes: function (this: JSCodeshift) {
     const paths: any = [];
-    // @ts-ignore
-    this.forEach(function (path: any) {
+    this.forEach(function (path: JSXElementType.ASTPath<any>) {
       const children = path.get("children");
       const l = children.value.length;
       for (let i = 0; i < l; i++) {
@@ -165,10 +174,9 @@ const traversalMethods = {
    *
    * @return {JSXElementCollection}
    */
-  childElements: function () {
+  childElements: function (this: JSCodeshift) {
     const paths: any = [];
-    // @ts-ignore
-    this.forEach(function (path: any) {
+    this.forEach(function (path: JSXElementType.ASTPath<any>) {
       const children = path.get("children");
       const l = children.value.length;
       for (let i = 0; i < l; i++) {
@@ -185,13 +193,16 @@ const traversalMethods = {
    *
    * @return {Collection<jsxElementType>}
    */
-  childNodesOfType: function (jsxChildElementType: any) {
-    const paths: any = [];
-    // @ts-ignore
-    this.forEach(function (path: any) {
+  childNodesOfType: function (
+    this: JSCodeshift,
+    jsxChildElementType: JSXElementType.JSXElement
+  ) {
+    const paths: JSXElementType.ASTPath<any>[] = [];
+    this.forEach(function (path: JSXElementType.ASTPath<any>) {
       const children = path.get("children");
       const l = children.value.length;
       for (let i = 0; i < l; i++) {
+        // @ts-ignore
         if (jsxChildElementType.check(children.value[i])) {
           paths.push(children.get(i));
         }

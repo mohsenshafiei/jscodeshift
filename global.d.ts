@@ -4,6 +4,11 @@ namespace jest {
   }
 }
 
+declare module "flow-parser" {
+  const flowParser: any;
+  export default flowParser;
+}
+
 declare module "@babel/preset-typescript" {
   const presetTypescript: any;
   export default presetTypescript;
