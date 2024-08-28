@@ -15,66 +15,62 @@ const b = recast.types.builders;
 const NodePath = recast.types.NodePath;
 
 describe("core API", function () {
-  it.only("returns a Collection from a source string", async function () {
-    const C = await core;
-    expect(C).toContain("Collection");
+  it("returns a Collection from a source string", function () {
+    expect(core("var foo;").constructor.name).toContain("Collection");
   });
 
-  // it("returns a Collection from an AST node", function () {
-  //   const node = b.identifier("foo");
-  //   // @ts-ignore
-  //   expect(core(node).constructor.name).toContain("Collection");
-  // });
+  it("returns a Collection from an AST node", function () {
+    const node = b.identifier("foo");
+    expect(core(node).constructor.name).toContain("Collection");
+  });
 
-  // it("returns a Collection from an array of AST nodes", function () {
-  //   const node = b.identifier("foo");
-  //   // @ts-ignore
-  //   expect(core([node]).constructor.name).toContain("Collection");
-  // });
+  it("returns a Collection from an array of AST nodes", function () {
+    const node = b.identifier("foo");
+    expect(core([node]).constructor.name).toContain("Collection");
+  });
 
-  // it("returns a Collection from a path", function () {
-  //   const path = new NodePath(b.identifier("foo"));
-  //   expect(core(path).constructor.name).toContain("Collection");
-  // });
+  it("returns a Collection from a path", function () {
+    const path = new NodePath(b.identifier("foo"));
+    expect(core(path).constructor.name).toContain("Collection");
+  });
 
-  // it("returns a Collection from an array of paths", function () {
-  //   const path = new NodePath(b.identifier("foo"));
-  //   expect(core([path]).constructor.name).toContain("Collection");
-  // });
+  it("returns a Collection from an array of paths", function () {
+    const path = new NodePath(b.identifier("foo"));
+    expect(core([path]).constructor.name).toContain("Collection");
+  });
 
-  // it("returns a Collection from an empty array", function () {
-  //   expect(core([]).constructor.name).toContain("Collection");
-  // });
+  it("returns a Collection from an empty array", function () {
+    expect(core([]).constructor.name).toContain("Collection");
+  });
 
-  // it("throws if it gets an invalid value", function () {
-  //   // @ts-ignore
-  //   expect(() => core(42)).toThrow();
-  //   // @ts-ignore
-  //   expect(() => core({})).toThrow();
-  // });
+  it("throws if it gets an invalid value", function () {
+    // @ts-ignore
+    expect(() => core(42)).toThrow();
+    // @ts-ignore
+    expect(() => core({})).toThrow();
+  });
 
-  // it("returns the source as is if nothing was modified", function () {
-  //   const source = "\nvar foo;\n";
-  //   expect(core(source).toSource()).toEqual(source);
-  // });
+  it("returns the source as is if nothing was modified", function () {
+    const source = "\nvar foo;\n";
+    expect(core(source).toSource()).toEqual(source);
+  });
 
-  // it("plugins are called with core", function (done) {
-  //   core.use(function (j: any) {
-  //     expect(j).toBe(core);
-  //     done();
-  //   });
-  // });
+  it("plugins are called with core", function (done) {
+    core.use(function (j) {
+      expect(j).toBe(core);
+      done();
+    });
+  });
 
-  // it("plugins are only registered once", function () {
-  //   let ct = 0;
+  it("plugins are only registered once", function () {
+    let ct = 0;
 
-  //   function plugin() {
-  //     ct++;
-  //   }
+    function plugin() {
+      ct++;
+    }
+    core.use(plugin);
+    core.use(plugin);
 
-  //   core.use(plugin);
-  //   core.use(plugin);
-
-  //   expect(ct).toBe(1);
-  // });
+    expect(ct).toBe(1);
+  });
 });

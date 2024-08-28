@@ -1,35 +1,29 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 "use strict";
 
 import type { Options, Parser } from "./types/core";
 import type { ParserOptions, FlowParserOptions } from "./types/parsers";
+import babylon from "../parser/babylon";
+import flow from "../parser/flow";
+import ts from "../parser/ts";
+import tsx from "../parser/tsx";
+import babelCompat from "../parser/babel5Compat";
 
-export async function getParser(
+export function getParser(
   parserName?: string,
   options?: ParserOptions | FlowParserOptions
-): Promise<Parser> {
+): Parser {
   switch (parserName) {
     case "babylon":
-      return (await import("../parser/babylon")).default(
-        options as ParserOptions
-      );
+      return babylon(options as ParserOptions);
     case "flow":
-      return (await import("../parser/flow")).default(
-        options as FlowParserOptions
-      );
+      return flow(options as FlowParserOptions);
     case "ts":
-      return (await import("../parser/ts")).default();
+      return ts();
     case "tsx":
-      return (await import("../parser/tsx")).default();
+      return tsx();
     case "babel":
     default:
-      return (await import("../parser/babel5Compat")).default();
+      return babelCompat();
   }
 }
 

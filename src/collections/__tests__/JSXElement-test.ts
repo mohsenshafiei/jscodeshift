@@ -19,7 +19,7 @@ describe("JSXCollection API", function () {
   let types: any;
   let b: any;
 
-  beforeEach(async function () {
+  beforeEach(function () {
     jest.resetModules();
 
     Collection = CollectionModule;
@@ -42,7 +42,7 @@ describe("JSXCollection API", function () {
           '  {"foo"}',
           "</FooBar>",
         ].join("\n"),
-        { parser: await getParser() }
+        { parser: getParser() }
       ).program,
     ];
   });

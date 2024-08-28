@@ -15,10 +15,12 @@ declare namespace core {
   interface Filters {
     JSXElement?: JSXElement.FilterMethods;
     VariableDeclarator?: VariableDeclarator.FilterMethods;
+    [key: string]: any;
   }
 
   interface Mappings {
     JSXElement?: JSXElement.MappingMethods;
+    [key: string]: any;
   }
 
   interface Plugin {

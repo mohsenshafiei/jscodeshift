@@ -19,7 +19,7 @@ describe("ImportDeclaration API", function () {
   let types: any;
   let b: any;
 
-  beforeEach(async function () {
+  beforeEach(function () {
     jest.resetModules();
 
     Collection = CollectionModule;
@@ -36,7 +36,7 @@ describe("ImportDeclaration API", function () {
           'import Foo, { Bar, Baz } from "@meta/foo";',
           'import { Bar as Burger } from "@meta/bar";',
         ].join("\n"),
-        { parser: await getParser() }
+        { parser: getParser() }
       ).program,
     ];
   });

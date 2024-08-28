@@ -1,21 +1,10 @@
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-"use strict";
-
 import * as Collection from "./Collection";
-
 // @ts-ignore
 import collections from "./collections";
 import getParser from "./getParser";
 import { matchNode } from "./matchNode";
 import * as recast from "recast";
 import * as template from "./template";
-
 import { Options } from "./types/core";
 import * as CoreTypes from "./types/core";
 
@@ -23,44 +12,30 @@ const Node = recast.types.namedTypes.Node;
 const NodePath = recast.types.NodePath;
 
 // Register all built-in collections
-for (var name in collections) {
+for (const name in collections) {
   collections[name].register();
 }
 
 /**
- * Main entry point to the tool. The function accepts multiple different kinds
- * of arguments as a convenience. In particular the function accepts either
+ * Main entry point to the tool. This function creates a Collection instance
+ * from a source string or AST nodes/paths.
  *
- * - a string containing source code
- *   The string is parsed with Recast
- * - a single AST node
- * - a single node path
- * - an array of nodes
- * - an array of node paths
- *
- * @exports jscodeshift
  * @param {Node|NodePath|Array|string} source
  * @param {Object} options Options to pass to Recast when passing source code
  * @return {Collection}
  */
-function core(source: string, options: Options) {
-  return typeof source === "string"
-    ? fromSource(source, options)
-    : fromAST(source);
+function core(source: any, options: Options = {}) {
+  if (typeof source === "string") {
+    return fromSource(source, options);
+  } else {
+    return fromAST(source);
+  }
 }
 
-/**
- * Returns a collection from a node, node path, array of nodes or array of node
- * paths.
- *
- * @ignore
- * @param {Node|NodePath|Array} source
- * @return {Collection}
- */
 function fromAST(ast: CoreTypes.ASTNode | CoreTypes.ASTNode[]) {
   if (Array.isArray(ast)) {
     if (ast[0] instanceof NodePath || ast.length === 0) {
-      return Collection.fromPaths(ast);
+      return Collection.fromPaths(ast as any);
     } else if (Node.check(ast[0])) {
       return Collection.fromNodes(ast);
     }
@@ -76,25 +51,15 @@ function fromAST(ast: CoreTypes.ASTNode | CoreTypes.ASTNode[]) {
   );
 }
 
-function fromSource(source: string, options: Options) {
-  if (!options) {
-    options = {};
-  }
+function fromSource(source: string, options: Options): any {
   if (!options.parser) {
     options.parser = getParser();
   }
-  return fromAST(recast.parse(source, options));
+  const ast = recast.parse(source, options);
+  return fromAST(ast);
 }
 
-/**
- * Utility function to match a node against a pattern.
- * @augments core
- * @static
- * @param {Node|NodePath|Object} path
- * @parma {Object} filter
- * @return boolean
- */
-function match(path: any, filter: any) {
+function match(path: any, filter: any): boolean {
   if (!(path instanceof NodePath)) {
     if (typeof path.get === "function") {
       path = path.get();
@@ -107,31 +72,13 @@ function match(path: any, filter: any) {
 
 const plugins: CoreTypes.Plugin[] = [];
 
-/**
- * Utility function for registering plugins.
- *
- * Plugins are simple functions that are passed the core jscodeshift instance.
- * They should extend jscodeshift by calling `registerMethods`, etc.
- * This method guards against repeated registrations (the plugin callback will only be called once).
- *
- * @augments core
- * @static
- * @param {Function} plugin
- */
-function use(plugin: any) {
+function use(plugin: any): void {
   if (plugins.indexOf(plugin) === -1) {
     plugins.push(plugin);
     plugin(core);
   }
 }
 
-/**
- * Returns a version of the core jscodeshift function "bound" to a specific
- * parser.
- *
- * @augments core
- * @static
- */
 export function withParser(
   parser: string | CoreTypes.Parser
 ): CoreTypes.JSCodeshift {
@@ -140,48 +87,42 @@ export function withParser(
 
   const newCore = (source: string, options: Options = {}) => {
     options.parser = options.parser || resolvedParser;
-    return core(source, options);
+    return core(fromSource(source, options));
   };
 
   return enrichCore(newCore as any, resolvedParser);
 }
 
-/**
- * The ast-types library
- * @external astTypes
- * @see {@link https://github.com/benjamn/ast-types}
- */
+function enrichCore(
+  coreInstance: CoreTypes.JSCodeshift,
+  parser?: CoreTypes.Parser
+): CoreTypes.JSCodeshift {
+  Object.assign(coreInstance, recast.types.namedTypes);
+  Object.assign(coreInstance, recast.types.builders);
 
-function enrichCore(core: CoreTypes.JSCodeshift, parser: CoreTypes.Parser) {
-  // add builders and types to the function for simple access
-  Object.assign(core, recast.types.namedTypes);
-  Object.assign(core, recast.types.builders);
-  core.registerMethods = Collection.registerMethods;
-  /**
-   * @augments core
-   * @type external:astTypes
-   */
-  core.types = recast.types;
-  core.match = match;
-  // @ts-ignore
-  core.template = template.withParser(parser);
+  const resolvedParser = parser || getParser();
+  coreInstance.registerMethods = Collection.registerMethods;
+  coreInstance.types = recast.types;
+  coreInstance.match = match;
+  coreInstance.template = template.withParser(resolvedParser) as any;
+  coreInstance.filters = {};
+  coreInstance.mappings = {};
 
-  // add mappings and filters to function
-  core.filters = {};
-  core.mappings = {};
   for (const name in collections) {
     if (collections[name].filters) {
-      // @ts-ignore
-      core.filters[name] = collections[name].filters;
+      coreInstance.filters[name] = collections[name].filters;
     }
     if (collections[name].mappings) {
-      // @ts-ignore
-      core.mappings[name] = collections[name].mappings;
+      coreInstance.mappings[name] = collections[name].mappings;
     }
   }
-  core.use = use;
-  core.withParser = withParser;
-  return core;
+  coreInstance.use = use;
+  coreInstance.withParser = withParser;
+
+  return coreInstance;
 }
 
-export default enrichCore(core as any, getParser());
+// Export the enriched core, which is now a function that returns Collection instances.
+const enrichedCore: CoreTypes.Core = enrichCore(core as CoreTypes.JSCodeshift);
+
+export default enrichedCore;

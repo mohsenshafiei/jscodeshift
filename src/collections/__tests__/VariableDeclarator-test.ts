@@ -19,7 +19,7 @@ describe("VariableDeclarators", function () {
   let Collection: any;
   let VariableDeclaratorCollection: any;
 
-  beforeEach(async function () {
+  beforeEach(function () {
     Collection = CollectionModule;
     VariableDeclaratorCollection = VariableDeclarator;
     types = recast.types.namedTypes;
@@ -58,7 +58,7 @@ describe("VariableDeclarators", function () {
           "class Foo { @decorator\n*stuff() {} }",
           "<Component foo={foo} />",
         ].join("\n"),
-        { parser: await getParser() }
+        { parser: getParser() }
       ).program,
     ];
   });
@@ -138,10 +138,10 @@ describe("VariableDeclarators", function () {
       expect(identifiers.length).toBe(1);
     });
 
-    it("properly renames a shorthand property that was using the old variable name", async function () {
+    it("properly renames a shorthand property that was using the old variable name", function () {
       nodes = [
         parse(["var foo = 42;", "var obj2 = {", "  foo,", "};"].join("\n"), {
-          parser: await getParser(),
+          parser: getParser(),
         }).program,
       ];
 
@@ -189,10 +189,10 @@ describe("VariableDeclarators", function () {
     });
 
     describe("parsing with bablylon", function () {
-      it("does not rename object property", async function () {
+      it("does not rename object property", function () {
         nodes = [
           parse("var foo = 42; var obj = { foo: null };", {
-            parser: await getParser("babylon"),
+            parser: getParser("babylon"),
           }).program,
         ];
         Collection.fromNodes(nodes)
@@ -209,10 +209,10 @@ describe("VariableDeclarators", function () {
         ).toBe(1);
       });
 
-      it("does not rename object method", async function () {
+      it("does not rename object method", function () {
         nodes = [
           parse("var foo = 42; var obj = { foo() {} };", {
-            parser: await getParser("babylon"),
+            parser: getParser("babylon"),
           }).program,
         ];
         Collection.fromNodes(nodes)
@@ -229,10 +229,10 @@ describe("VariableDeclarators", function () {
         ).toBe(1);
       });
 
-      it("does not rename class method", async function () {
+      it("does not rename class method", function () {
         nodes = [
           parse("var foo = 42; class A { foo() {} }", {
-            parser: await getParser("babylon"),
+            parser: getParser("babylon"),
           }).program,
         ];
         Collection.fromNodes(nodes)
