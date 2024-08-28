@@ -27,8 +27,6 @@ const tsOptions: babel.ParserOptions = {
     "doExpressions",
     "dynamicImport",
     "exportDefaultFrom",
-    // @ts-ignore
-    "exportExtensions",
     "exportNamespaceFrom",
     "functionBind",
     "functionSent",

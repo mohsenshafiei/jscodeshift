@@ -10,11 +10,11 @@ import babelCompat from "../parser/babel5Compat";
 
 export function getParser(
   parserName?: string,
-  options?: ParserOptions | FlowParserOptions
+  options?: babel.ParserOptions | ParserOptions | FlowParserOptions
 ): Parser {
   switch (parserName) {
     case "babylon":
-      return babylon(options as ParserOptions);
+      return babylon(options as babel.ParserOptions);
     case "flow":
       return flow(options as FlowParserOptions);
     case "ts":

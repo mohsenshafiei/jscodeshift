@@ -24,7 +24,10 @@ for (const name in collections) {
  * @param {Object} options Options to pass to Recast when passing source code
  * @return {Collection}
  */
-function core(source: any, options: Options = {}) {
+function core(
+  source: CoreTypes.ASTNode | CoreTypes.ASTNode[] | string,
+  options: Options = {}
+) {
   if (typeof source === "string") {
     return fromSource(source, options);
   } else {
@@ -104,7 +107,7 @@ function enrichCore(
   coreInstance.registerMethods = Collection.registerMethods;
   coreInstance.types = recast.types;
   coreInstance.match = match;
-  coreInstance.template = template.withParser(resolvedParser) as any;
+  coreInstance.template = template.withParser(resolvedParser);
   coreInstance.filters = {};
   coreInstance.mappings = {};
 
@@ -123,6 +126,8 @@ function enrichCore(
 }
 
 // Export the enriched core, which is now a function that returns Collection instances.
-const enrichedCore: CoreTypes.Core = enrichCore(core as CoreTypes.JSCodeshift);
+const enrichedCore: CoreTypes.JSCodeshift = enrichCore(
+  core as CoreTypes.JSCodeshift
+);
 
 export default enrichedCore;

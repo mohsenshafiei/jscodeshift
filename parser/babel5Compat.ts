@@ -27,10 +27,10 @@ interface ParserOptions {
   plugins: (string | [string, ParserPluginOptions])[];
 }
 
-const options: ParserOptions = {
+const options: babel.ParserOptions = {
   sourceType: "module",
-  allowHashBang: true,
-  ecmaVersion: Infinity,
+  // allowHashBang: true,
+  // ecmaVersion: Infinity,
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
   startLine: 1,
@@ -41,7 +41,7 @@ const options: ParserOptions = {
     "asyncGenerators",
     "classProperties",
     "doExpressions",
-    "exportExtensions",
+    // "exportExtensions",
     "functionBind",
     "functionSent",
     "objectRestSpread",
@@ -59,7 +59,6 @@ const options: ParserOptions = {
 export default function () {
   return {
     parse(code: string) {
-      // @ts-ignore
       return babylon.parse(code, options);
     },
   };

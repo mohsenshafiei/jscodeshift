@@ -12,7 +12,7 @@
 import fs from "fs";
 import path from "path";
 import { TestOptions } from "./types/testUtils";
-import { Options, Transform } from "./types/core";
+import { Options, Parser, Transform } from "./types/core";
 import jscodeshiftCore from "./core";
 
 function isTransformModule(
@@ -49,7 +49,7 @@ export async function applyTransform(
   ) {
     jscodeshift = jscodeshift.withParser(
       (testOptions && testOptions.parser) ||
-        (isTransformModule(module) && module.parser)
+        ((isTransformModule(module) && module.parser) as string | Parser)
     );
   }
 
@@ -249,7 +249,7 @@ export function defineSnapshotTestFromFixture(
   options: Options,
   testFilePrefix: string,
   testName?: string,
-  testOptions: any = {}
+  testOptions: TestOptions = {}
 ) {
   const extension = extensionForParser(
     testOptions.parser || (isTransformModule(module) && module.parser)

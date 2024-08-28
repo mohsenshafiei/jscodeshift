@@ -18,7 +18,6 @@ exports[`tsxParser parse extends the ts config with jsx support 1`] = `
       "doExpressions",
       "dynamicImport",
       "exportDefaultFrom",
-      "exportExtensions",
       "exportNamespaceFrom",
       "functionBind",
       "functionSent",

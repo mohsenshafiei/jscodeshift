@@ -24,7 +24,7 @@ interface ParserOptions {
   plugins: (string | [string, ParserPluginOptions])[];
 }
 
-const defaultOptions: ParserOptions = {
+const defaultOptions: babel.ParserOptions = {
   sourceType: "module",
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
@@ -61,10 +61,10 @@ const defaultOptions: ParserOptions = {
 /**
  * Wrapper to set default options
  */
-export default function (options: ParserOptions = defaultOptions) {
+export default function (options: babel.ParserOptions = defaultOptions) {
   return {
     parse(code: string) {
-      return babylon.parse(code, options as any);
+      return babylon.parse(code, options);
     },
   };
 }

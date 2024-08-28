@@ -7,3 +7,4 @@ node_modules/
 # Except...
 !/types/**/*.d.ts
 !/jest.config.js
+!/global.d.ts
