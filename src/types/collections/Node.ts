@@ -17,8 +17,8 @@ type ASTNode = types.ASTNode;
 
 export interface TraversalMethods {
   find<T extends ASTNode>(
-    type: types.Type<T>,
-    filter?: RecursiveMatchNode<T>
+    type: types.Type<T> | string,
+    filter?: RecursiveMatchNode<T> | { name: string }
   ): Collection.Collection<T>;
 
   closestScope(): Collection.Collection<astTypes.namedTypes.ASTNode>;

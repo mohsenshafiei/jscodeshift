@@ -7,22 +7,26 @@
 
 "use strict";
 
-/*global jest, describe, it, expect, beforeEach*/
+import { template } from "@babel/core";
+import core from "../core";
+import { Collection, JSCodeshift } from "../types/core";
+import flowParser from "../../parser/flow";
+import temp from "../template";
 
 describe("Templates", () => {
   let statements: any;
   let statement: any;
   let expression: any;
-  let jscodeshift: any;
+  let asyncExpression: any;
+  let jscodeshift: JSCodeshift;
 
   beforeEach(() => {
-    jest.resetModules();
-
-    jscodeshift = require("../core");
+    jscodeshift = core;
     const template = jscodeshift.template;
     expression = template.expression;
     statement = template.statement;
     statements = template.statements;
+    asyncExpression = template.asyncExpression;
   });
 
   it("interpolates expression nodes with source code", () => {
@@ -35,6 +39,8 @@ if(bar) {
 if(alert(bar)) {
   console.log(42);
 }`;
+
+    const x = jscodeshift(input);
 
     expect(
       jscodeshift(input)
@@ -72,9 +78,9 @@ while (i < 10) {
     ).toEqual(expected);
   });
 
-  it("can be used with a different parser", () => {
-    const parser = require("../../parser/flow")();
-    const template = require("../template")(parser);
+  it("can be used with a different parser", async () => {
+    const parser = flowParser();
+    const template = temp(parser);
     const node = { type: "Literal", value: 41 };
 
     expect(
@@ -95,6 +101,7 @@ while (i < 10) {
 
     expect(
       jscodeshift(input)
+        // @ts-ignore
         .find("VariableDeclaration")
         .replaceWith(classDecl)
         .toSource()
@@ -102,20 +109,20 @@ while (i < 10) {
   });
   it("correctly parses expressions without any interpolation", () => {
     const expected = "function() {}";
-
     expect(jscodeshift(expression`function() {}`).toSource()).toEqual(expected);
   });
 
-  for (const parser of ["babel", "babylon", "flow", "ts", "tsx"]) {
-    it(`asyncExpression correctly parses expressions with await -- ${parser}`, () => {
+  it.each(["babel", "babylon", "flow", "ts", "tsx"])(
+    "asyncExpression correctly parses expressions with await -- %s",
+    (parser: string) => {
       const expected = "{\n  bar: await baz\n}";
       const j = jscodeshift.withParser(parser);
 
       expect(
-        j(j.template.asyncExpression`{\n  bar: await baz\n}`).toSource()
+        jscodeshift(asyncExpression`{\n  bar: await baz\n}`).toSource()
       ).toEqual(expected);
-    });
-  }
+    }
+  );
 
   describe("explode arrays", () => {
     it("explodes arrays in function definitions", () => {
@@ -124,6 +131,7 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith(
             (p: any) => expression`function foo(${p.node.elements}, c) {}`
@@ -135,6 +143,7 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith(
             (p: any) => expression`function(${p.node.elements}, c) {}`
@@ -146,6 +155,7 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith((p: any) => expression`${p.node.elements} => {}`)
           .toSource()
@@ -155,6 +165,7 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith((p: any) => expression`(${p.node.elements}, c) => {}`)
           .toSource()
@@ -166,6 +177,7 @@ while (i < 10) {
       let expected = "var foo, a, b;";
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("VariableDeclaration")
           // Need to use a block here because the arrow doesn't seem to be
           // compiled with a line break after the return statement. Can't repro
@@ -183,6 +195,7 @@ while (i < 10) {
       let expected = "var foo = [a, b, c];";
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith((p: any) => expression`[${p.node.elements}, c]`)
           .toSource()
@@ -194,6 +207,7 @@ while (i < 10) {
       let expected = /var foo = \{\s*a,\s*b,\s*c: 42\s*};/;
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("ObjectExpression")
           .replaceWith((p: any) => expression`{${p.node.properties}, c: 42}`)
           .toSource()
@@ -206,6 +220,7 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
+          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith((p: any) => expression`bar(${p.node.elements}, c)`)
           .toSource()

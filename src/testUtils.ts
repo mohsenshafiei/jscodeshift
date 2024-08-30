@@ -21,36 +21,22 @@ function isTransformModule(
   return (module as { default: Transform }).default !== undefined;
 }
 
-export async function applyTransform(
-  module:
-    | {
-        default: Transform;
-        parser: TestOptions["parser"];
-      }
-    | Transform,
-  options: Options | null | undefined,
-  input: {
-    path?: string;
-    source: string;
-  },
-  testOptions?: TestOptions
+export function applyTransform(
+  module: any,
+  options: any,
+  input: any,
+  testOptions = {}
 ) {
   // Handle ES6 modules using default export for the transform
-  const transform: Transform = isTransformModule(module)
-    ? module.default
-    : module;
+  const transform = module.default ? module.default : module;
 
   // Jest resets the module registry after each test, so we need to always get
   // a fresh copy of jscodeshift on every test run.
   let jscodeshift = jscodeshiftCore;
-  if (
-    (testOptions && testOptions.parser) ||
-    (isTransformModule(module) && module.parser)
-  ) {
-    jscodeshift = jscodeshift.withParser(
-      (testOptions && testOptions.parser) ||
-        ((isTransformModule(module) && module.parser) as string | Parser)
-    );
+  // @ts-ignore
+  if (testOptions.parser || module.parser) {
+    // @ts-ignore
+    jscodeshift = jscodeshift.withParser(testOptions.parser || module.parser);
   }
 
   const output = transform(
@@ -59,7 +45,6 @@ export async function applyTransform(
       jscodeshift,
       j: jscodeshift,
       stats: () => {},
-      report: () => {},
     },
     options || {}
   );
@@ -92,12 +77,13 @@ export function runInlineTest(
         parser: TestOptions["parser"];
       }
     | Transform,
-  options: Options | null,
   input: {
     path?: string;
     source: string;
   },
+
   expectedOutput: string,
+  options?: Options | null,
   testOptions?: TestOptions
 ) {
   const output = applyTransform(module, options, input, testOptions);
@@ -134,10 +120,10 @@ function extensionForParser(parser: any) {
  * - Test data should be located in a directory called __testfixtures__
  *   alongside the transform and __tests__ directory.
  */
-export function runTest(
+export async function runTest(
   dirName: string,
   transformName: string,
-  options: Options | null,
+  options?: Options | null,
   testFilePrefix?: string,
   testOptions?: TestOptions
 ) {
@@ -146,7 +132,7 @@ export function runTest(
   }
 
   // Assumes transform is one level up from __tests__ directory
-  const module = require(path.join(dirName, "..", transformName));
+  const module = await import(path.join(dirName, "..", transformName));
   const extension = extensionForParser(
     (testOptions && testOptions.parser) || module.parser
   );
@@ -162,12 +148,12 @@ export function runTest(
   );
   runInlineTest(
     module,
-    options,
     {
       path: inputPath,
       source,
     },
     expectedOutput,
+    options,
     testOptions
   );
 }
@@ -179,7 +165,7 @@ export function runTest(
 export function defineTest(
   dirName: string,
   transformName: string,
-  options: Options | null,
+  options?: Options | null,
   testFilePrefix?: string,
   testOptions?: TestOptions
 ) {
@@ -208,11 +194,11 @@ export function defineInlineTest(
   it(testName || "transforms correctly", () => {
     runInlineTest(
       module,
-      options,
       {
         source: input,
       },
-      expectedOutput
+      expectedOutput,
+      options
     );
   });
 }

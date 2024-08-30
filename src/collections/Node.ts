@@ -189,7 +189,7 @@ const mutationMethods = {
   },
 };
 
-export function registerer() {
+function registerer() {
   Collection.registerMethods(traversalMethods, Node);
   Collection.registerMethods(mutationMethods, Node);
   Collection.setDefaultCollectionType(Node);

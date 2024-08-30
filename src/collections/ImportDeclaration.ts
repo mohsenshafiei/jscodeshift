@@ -107,7 +107,7 @@ const globalMethods = {
 };
 
 function register() {
-  NodeCollection.registerer();
+  NodeCollection.register();
   Collection.registerMethods(globalMethods, types.Node);
 }
 

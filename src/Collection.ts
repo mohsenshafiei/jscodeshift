@@ -391,7 +391,6 @@ export function fromPaths<N>(
     paths.every((n: CollectionType.ASTPath<N>) => n instanceof NodePath),
     "Every element in the array should be a NodePath"
   );
-
   return new Collection(paths, parent, type);
 }
 
@@ -407,7 +406,7 @@ export function fromPaths<N>(
  * @param {Type} type An AST type
  * @return {Collection}
  */
-export function fromNodes(nodes: any, parent?: any, type?: ASTTypes.Type<any>) {
+export function fromNodes(nodes: any, parent: any, type: any) {
   assert.ok(
     nodes.every((n: any) => Node.check(n)),
     "Every element in the array should be a Node"

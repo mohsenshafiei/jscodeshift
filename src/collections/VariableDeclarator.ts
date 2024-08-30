@@ -11,6 +11,7 @@ import * as Collection from "../Collection";
 import * as NodeCollection from "./Node";
 import once from "../utils/once";
 import * as recast from "recast";
+import { JSCodeshift } from "../types/core";
 
 const astNodesAreEquivalent = recast.types.astNodesAreEquivalent;
 const b = recast.types.builders;
@@ -38,9 +39,11 @@ const globalMethods = {
    * @param {string} name
    * @return {Collection}
    */
-  findVariableDeclarators: function (name: string): Collection.ICollection {
+  findVariableDeclarators: function (
+    this: JSCodeshift,
+    name: string
+  ): Collection.ICollection {
     const filter = name ? { id: { name: name } } : null;
-    // @ts-ignore
     return this.find(VariableDeclarator, filter);
   },
 };
@@ -88,10 +91,11 @@ const transformMethods = {
    * @param {string} newName
    * @return {Collection}
    */
-  renameTo: function (newName: string): any {
-    // TODO: Include JSXElements
-    // @ts-ignore
-    return this.forEach(function (path: NodePath) {
+  renameTo: function (
+    this: JSCodeshift,
+    newName: string
+  ): Collection.ICollection {
+    return this.forEach(function (this: JSCodeshift, path: NodePath) {
       const node = path.value;
       const oldName = node.id.name;
       const rootScope = path.scope;
@@ -209,7 +213,7 @@ const transformMethods = {
 };
 
 function registerer() {
-  NodeCollection.registerer();
+  NodeCollection.register();
   Collection.registerMethods(globalMethods);
   Collection.registerMethods(transformMethods, VariableDeclarator);
 }

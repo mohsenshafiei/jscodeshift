@@ -1,5 +1,4 @@
 import * as Collection from "./Collection";
-// @ts-ignore
 import collections from "./collections";
 import getParser from "./getParser";
 import { matchNode } from "./matchNode";
@@ -13,6 +12,7 @@ const NodePath = recast.types.NodePath;
 
 // Register all built-in collections
 for (const name in collections) {
+  // @ts-ignore
   collections[name].register();
 }
 
@@ -35,17 +35,20 @@ function core(
   }
 }
 
-function fromAST(ast: CoreTypes.ASTNode | CoreTypes.ASTNode[]) {
+// @ts-ignore
+function fromAST(ast) {
   if (Array.isArray(ast)) {
     if (ast[0] instanceof NodePath || ast.length === 0) {
-      return Collection.fromPaths(ast as any);
+      return Collection.fromPaths(ast);
     } else if (Node.check(ast[0])) {
+      // @ts-ignore
       return Collection.fromNodes(ast);
     }
   } else {
     if (ast instanceof NodePath) {
       return Collection.fromPaths([ast]);
     } else if (Node.check(ast)) {
+      // @ts-ignore
       return Collection.fromNodes([ast]);
     }
   }
@@ -82,18 +85,21 @@ function use(plugin: any): void {
   }
 }
 
-export function withParser(
-  parser: string | CoreTypes.Parser
-): CoreTypes.JSCodeshift {
-  const resolvedParser =
-    typeof parser === "string" ? getParser(parser) : parser;
+function withParser(parser: string | CoreTypes.Parser): CoreTypes.JSCodeshift {
+  if (typeof parser === "string") {
+    parser = getParser(parser);
+  }
 
-  const newCore = (source: string, options: Options = {}) => {
-    options.parser = options.parser || resolvedParser;
-    return core(fromSource(source, options));
+  const newCore = function (source: string, options: Options) {
+    if (options && !options.parser) {
+      options.parser = parser;
+    } else {
+      options = { parser };
+    }
+    return core(source, options);
   };
 
-  return enrichCore(newCore as any, resolvedParser);
+  return enrichCore(newCore as CoreTypes.JSCodeshift, parser);
 }
 
 function enrichCore(
@@ -112,10 +118,13 @@ function enrichCore(
   coreInstance.mappings = {};
 
   for (const name in collections) {
+    // @ts-ignore
     if (collections[name].filters) {
+      // @ts-ignore
       coreInstance.filters[name] = collections[name].filters;
-    }
+    } // @ts-ignore
     if (collections[name].mappings) {
+      // @ts-ignore
       coreInstance.mappings[name] = collections[name].mappings;
     }
   }

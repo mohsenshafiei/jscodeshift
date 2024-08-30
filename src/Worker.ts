@@ -5,50 +5,56 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-"use strict";
-
-const EventEmitter = require("events").EventEmitter;
-
+import { EventEmitter } from "events";
 import async from "neo-async";
 import fs from "graceful-fs";
 import writeFileAtomic from "write-file-atomic";
 import { DEFAULT_EXTENSIONS } from "@babel/core";
 import getParser from "./getParser";
-import * as jscodeshift from "./core";
+import jscodeshift from "./core";
+import { Options, Parser } from "./types/core";
+import presetEnv from "@babel/preset-env";
+import babelRegister from "@babel/register";
+import presetTypescript from "@babel/preset-typescript"; //
+import presetFlow from "@babel/preset-flow"; //
+import classProperties from "@babel/plugin-transform-class-properties"; //
+import nullishCoalescingOperator from "@babel/plugin-transform-nullish-coalescing-operator"; //
+import optionalChaining from "@babel/plugin-transform-optional-chaining";
+import modulesCommonjs from "@babel/plugin-transform-modules-commonjs";
+import privateMethods from "@babel/plugin-transform-private-methods";
 
-let presetEnv: typeof import("@babel/preset-env");
-async function loadPresetEnv(): Promise<void> {
-  try {
-    presetEnv = await import("@babel/preset-env");
-  } catch (error) {
-    console.error("Failed to load @babel/preset-env:", error);
+class CustomEmitter extends EventEmitter {
+  send(data: any) {
+    // Custom logic for send
+    this.emit("message", data);
   }
 }
-loadPresetEnv();
 
-let emitter: any;
-let finish: any;
-let notify: any;
-let transform: any;
-let parserFromTransform: any;
+let emitter: CustomEmitter | undefined;
+let finish: () => void;
+let notify: (data: any) => void;
+let transform: Function;
+let parserFromTransform: Function | string | undefined;
+
+let worker: any;
 
 if (module.parent) {
-  emitter = new EventEmitter();
+  emitter = new CustomEmitter();
   emitter.send = (data: any) => {
     run(data);
   };
   finish = () => {
-    emitter.emit("disconnect");
+    emitter?.emit("disconnect");
   };
   notify = (data: any) => {
-    emitter.emit("message", data);
+    emitter?.emit("message", data);
   };
-  module.exports = (args: any) => {
+  worker = (args: any[]) => {
     setup(args[0], args[1]);
     return emitter;
   };
 } else {
-  finish = () => setImmediate(() => process.disconnect());
+  finish = () => setImmediate(() => process.disconnect?.());
   notify = (data: any) => {
     process.send && process.send(data);
   };
@@ -58,41 +64,35 @@ if (module.parent) {
   setup(process.argv[2], process.argv[3]);
 }
 
-function prepareJscodeshift(options: any) {
+export default worker;
+
+function prepareJscodeshift(options: Options) {
   const parser =
     parserFromTransform || getParser(options.parser, options.parserConfig);
-  return jscodeshift.withParser(parser);
+  return jscodeshift.withParser(parser as string | Parser);
 }
 
-function setup(tr: any, babel: any) {
+async function setup(tr: any, babel: any) {
   if (babel === "babel") {
-    const presets = [];
+    const presets: any[] = [];
     if (presetEnv) {
-      // @ts-ignore
-      presets.push([presetEnv.default, { targets: { node: true } }]);
+      presets.push([presetEnv, { targets: { node: true } }]);
     }
-    presets.push(
-      /\.tsx?$/.test(tr)
-        ? require("@babel/preset-typescript").default
-        : require("@babel/preset-flow").default
-    );
+    presets.push(/\.tsx?$/.test(tr) ? presetTypescript() : presetFlow());
 
-    require("@babel/register")({
+    babelRegister({
       configFile: false,
       babelrc: false,
       presets,
       plugins: [
-        require("@babel/plugin-transform-class-properties").default,
-        require("@babel/plugin-transform-nullish-coalescing-operator").default,
-        require("@babel/plugin-transform-optional-chaining").default,
-        require("@babel/plugin-transform-modules-commonjs").default,
-        require("@babel/plugin-transform-private-methods").default,
+        classProperties(),
+        nullishCoalescingOperator(),
+        optionalChaining(),
+        modulesCommonjs(),
+        privateMethods(),
       ],
       extensions: [...DEFAULT_EXTENSIONS, ".ts", ".tsx"],
-      // By default, babel register only compiles things inside the current working directory.
-      // https://github.com/babel/babel/blob/2a4f16236656178e84b05b8915aab9261c55782c/packages/babel-register/src/node.js#L140-L157
       ignore: [
-        // Ignore parser related files
         /@babel\/parser/,
         /\/flow-parser\//,
         /\/recast\//,
@@ -101,7 +101,7 @@ function setup(tr: any, babel: any) {
     });
   }
 
-  const module = require(tr);
+  const module = await import(tr);
   transform = typeof module.default === "function" ? module.default : module;
   if (module.parser) {
     parserFromTransform =
@@ -115,31 +115,30 @@ function free() {
   notify({ action: "free" });
 }
 
-function updateStatus(status: any, file: any, msg?: any): any {
+function updateStatus(status: any, file: any, msg?: string): void {
   msg = msg ? file + " " + msg : file;
-  notify({ action: "status", status: status, msg: msg });
+  notify({ action: "status", status, msg });
 }
 
-function report(file: any, msg: any) {
+function report(file: any, msg: any): void {
   notify({ action: "report", file, msg });
 }
 
 function empty() {}
 
-function stats(name: any, quantity: any) {
+function stats(name: any, quantity: any): void {
   quantity = typeof quantity !== "number" ? 1 : quantity;
-  notify({ action: "update", name: name, quantity: quantity });
+  notify({ action: "update", name, quantity });
 }
 
-function trimStackTrace(trace: any) {
+function trimStackTrace(trace: string | undefined): string {
   if (!trace) {
     return "";
   }
-  // Remove this file from the stack trace of an error thrown in the transformer
   const lines = trace.split("\n");
-  const result: any = [];
-  lines.every(function (line: any) {
-    if (line.indexOf(__filename) === -1) {
+  const result: string[] = [];
+  lines.every((line: string) => {
+    if (!line.includes(__filename)) {
       result.push(line);
       return true;
     }
@@ -147,7 +146,7 @@ function trimStackTrace(trace: any) {
   return result.join("\n");
 }
 
-function run(data: any) {
+function run(data: any): void {
   const files = data.files;
   const options = data.options || {};
   if (!files.length) {
@@ -156,64 +155,67 @@ function run(data: any) {
   }
   async.each(
     files,
-    function (file: any, callback) {
-      fs.readFile(file, async function (err: any, source: any) {
-        if (err) {
-          updateStatus("error", file, "File error: " + err);
-          callback();
-          return;
-        }
-        source = source.toString();
-        try {
-          const jscodeshift = prepareJscodeshift(options);
-          const out = await transform(
-            {
-              path: file,
-              source: source,
-            },
-            {
-              j: jscodeshift,
-              jscodeshift: jscodeshift,
-              stats: options.dry ? stats : empty,
-              report: (msg: any) => report(file, msg),
-            },
-            options
-          );
-          if (!out || out === source) {
-            updateStatus(out ? "nochange" : "skip", file);
+    (file: string, callback: Function) => {
+      fs.readFile(
+        file,
+        async (err: NodeJS.ErrnoException | null, source: Buffer) => {
+          if (err) {
+            updateStatus("error", file, "File error: " + err);
             callback();
             return;
           }
-          if (options.print) {
-            console.log(out); // eslint-disable-line no-console
-          }
-          if (!options.dry) {
-            writeFileAtomic(file, out, function (err) {
-              if (err) {
-                updateStatus("error", file, "File writer error: " + err);
-              } else {
-                updateStatus("ok", file);
-              }
+          const sourceStr = source.toString();
+          try {
+            const jscodeshiftInstance = prepareJscodeshift(options);
+            const out = await transform(
+              {
+                path: file,
+                source: sourceStr,
+              },
+              {
+                j: jscodeshiftInstance,
+                jscodeshift: jscodeshiftInstance,
+                stats: options.dry ? stats : empty,
+                report: (msg: any) => report(file, msg),
+              },
+              options
+            );
+            if (!out || out === sourceStr) {
+              updateStatus(out ? "nochange" : "skip", file);
               callback();
-            });
-          } else {
-            updateStatus("ok", file);
+              return;
+            }
+            if (options.print) {
+              console.log(out); // eslint-disable-line no-console
+            }
+            if (!options.dry) {
+              writeFileAtomic(file, out, (err) => {
+                if (err) {
+                  updateStatus("error", file, "File writer error: " + err);
+                } else {
+                  updateStatus("ok", file);
+                }
+                callback();
+              });
+            } else {
+              updateStatus("ok", file);
+              callback();
+            }
+          } catch (err: any) {
+            updateStatus(
+              "error",
+              file,
+              "Transformation error (" +
+                err.message.replace(/\n/g, " ") +
+                ")\n" +
+                trimStackTrace(err.stack)
+            );
             callback();
           }
-        } catch (err: any) {
-          updateStatus(
-            "error",
-            file,
-            "Transformation error (" +
-              err.message.replace(/\n/g, " ") +
-              ")\n" +
-              trimStackTrace(err.stack)
-          );
-          callback();
         }
-      });
+      );
     },
-    function (err) {
+    (err: any) => {
       if (err) {
         updateStatus("error", "", "This should never be shown!");
       }

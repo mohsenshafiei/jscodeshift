@@ -5,11 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { API } from "../dist/types/core";
+
 /**
  * Example jscodeshift transformer. Simply reverses the names of all
  * identifiers.
  */
-export function transformer(file: any, api: any) {
+export default function transformer(file: any, api: any) {
   const j = api.jscodeshift;
 
   return j(file.source)

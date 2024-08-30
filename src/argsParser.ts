@@ -270,7 +270,7 @@ export default {
    */
   options(options: Options) {
     return {
-      parse(args: string[]) {
+      parse(args?: string[]) {
         return parse(options, args);
       },
       getHelpText() {

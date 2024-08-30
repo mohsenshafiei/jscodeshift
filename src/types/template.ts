@@ -29,6 +29,6 @@ declare namespace template {
 export interface NodeWithLocation {
   start?: number;
   end?: number;
-  loc?: any;
+  loc?: string;
   [key: string]: any;
 }

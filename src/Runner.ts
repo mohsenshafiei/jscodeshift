@@ -176,7 +176,7 @@ function getAllFiles(
   ).then(concatAll);
 }
 
-function run(
+export default function run(
   transformFile: string,
   paths: string[],
   options: CoreTypes.Options
@@ -365,5 +365,3 @@ function run(
       );
   }
 }
-
-exports.run = run;

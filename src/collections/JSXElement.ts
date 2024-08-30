@@ -231,7 +231,7 @@ const mappingMethods = {
 };
 
 function registerer() {
-  NodeCollection.registerer();
+  NodeCollection.register();
   Collection.registerMethods(globalMethods, types.Node);
   Collection.registerMethods(traversalMethods, JSXElement);
 }

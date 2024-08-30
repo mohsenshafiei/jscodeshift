@@ -9,7 +9,7 @@
 
 import * as recast from "recast";
 import * as CoreTypes from "./types/core";
-import { NodeWithLocation } from "./types/template";
+import { NodeWithLocation, Template } from "./types/template";
 
 const builders = recast.types.builders;
 const types = recast.types.namedTypes;
@@ -36,7 +36,7 @@ function ensureStatement(node: any) {
   return types.Statement.check(node)
     ? // Removing the location information seems to ensure that the node is
       // correctly reprinted with a trailing semicolon
-      cleanLocation(node)
+      cleanLocation(node as any)
     : builders.expressionStatement(node);
 }
 
@@ -112,7 +112,7 @@ function getUniqueVarName() {
   return `$jscodeshift${varNameCounter++}$`;
 }
 
-export function withParser(parser: CoreTypes.Parser) {
+export function withParser(parser: CoreTypes.Parser): Template {
   function statements(template: any /*, ...nodes*/) {
     template = Array.from(template);
     const nodes: any = Array.from(arguments).slice(1);
@@ -168,9 +168,9 @@ export function withParser(parser: CoreTypes.Parser) {
     if (expression.extra) {
       expression.extra.parenthesized = false;
     }
-
     return expression;
   }
-
   return { statements, statement, expression, asyncExpression };
 }
+
+export default withParser;

@@ -9,6 +9,7 @@
 
 import * as babylon from "@babel/parser";
 import baseOptions from "./tsOptions";
+import { ParserOptions } from "../src/types/parsers";
 
 const options: any = Object.assign({}, baseOptions);
 options.plugins = ["jsx"].concat(baseOptions.plugins as any);

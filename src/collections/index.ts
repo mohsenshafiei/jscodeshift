@@ -10,4 +10,4 @@ import * as JSXElement from "./JSXElement";
 import * as VariableDeclarator from "./VariableDeclarator";
 import * as ImportDeclaration from "./ImportDeclaration";
 
-export { Node, JSXElement, VariableDeclarator, ImportDeclaration };
+export default { Node, JSXElement, VariableDeclarator, ImportDeclaration };

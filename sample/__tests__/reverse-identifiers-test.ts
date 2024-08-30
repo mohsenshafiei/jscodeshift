@@ -21,7 +21,7 @@ import {
   defineInlineTest,
   defineSnapshotTestFromFixture,
 } from "../../src/testUtils";
-import { transformer } from "../reverse-identifiers";
+import transformer from "../reverse-identifiers";
 
 defineTest(__dirname, "reverse-identifiers");
 
