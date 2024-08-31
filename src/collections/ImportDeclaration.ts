@@ -106,9 +106,7 @@ const globalMethods = {
   },
 };
 
-function register() {
+export const register = once(function register() {
   NodeCollection.register();
   Collection.registerMethods(globalMethods, types.Node);
-}
-
-exports.register = once(register);
+});

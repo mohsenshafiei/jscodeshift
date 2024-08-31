@@ -15,12 +15,15 @@ import http from "http";
 import https from "https";
 import temp from "temp";
 import * as ignores from "./ignoreFiles";
-
+import os from "os";
 // Types
 import * as CoreTypes from "./types/core";
 import * as RunnerTypes from "./types/Runner";
 
-const availableCpus = Math.max(require("os").cpus().length - 1, 1);
+// import { createRequire } from "node:module";
+// const require = createRequire(import.meta.url);
+
+const availableCpus = Math.max(os.cpus().length - 1, 1);
 const CHUNK_SIZE = 50;
 
 function lineBreak(str: string) {

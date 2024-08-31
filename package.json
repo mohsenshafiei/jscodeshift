@@ -12,7 +12,8 @@
     "prepare": "cp -R src/ dist/",
     "test": "jest --bail",
     "ts-migrate": "ts-migrate",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "bin": "tsc bin/jscodeshift.ts"
   },
   "bin": {
     "jscodeshift": "./bin/jscodeshift.js"
@@ -54,8 +55,10 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.24.7",
+    "@babel/preset-env": "^7.25.4",
     "@types/babel__core": "^7.20.5",
     "@types/babel__preset-env": "^7.9.7",
+    "@types/babel__register": "^7.17.3",
     "@types/graceful-fs": "^4.1.9",
     "@types/jest": "^29.5.12",
     "@types/micromatch": "^4.0.9",
@@ -68,6 +71,7 @@
     "ts-jest": "^29.2.5",
     "ts-migrate": "^0.1.35",
     "ts-node": "^10.9.2",
+    "tsup": "^8.2.4",
     "typescript": "^5.5.4"
   },
   "engines": {

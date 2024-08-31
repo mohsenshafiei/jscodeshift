@@ -11,10 +11,10 @@ import path from "path";
 
 interface PackageJson {
   name: string;
-  [key: string]: any;
+  [key: string]: string;
 }
 
-export function requirePackage(name: string): PackageJson | {} {
+export default function requirePackage(name: string): PackageJson | {} {
   const entry = require.resolve(name);
   let dir = path.dirname(entry);
   while (dir !== "/") {

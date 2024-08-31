@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { API } from "../dist/types/core";
+import { API } from "../src/types/core";
 
 /**
  * Example jscodeshift transformer. Simply reverses the names of all
