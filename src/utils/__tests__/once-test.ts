@@ -12,7 +12,7 @@ import once from "../once";
 describe("once", function () {
   it("executes the function only once", function () {
     const mock = jest.fn().mockImplementation((foo) => foo);
-    const wrapped: any = once(mock);
+    const wrapped = once(mock);
 
     wrapped("foo");
     const result = wrapped("bar");

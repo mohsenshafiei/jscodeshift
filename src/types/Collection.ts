@@ -64,6 +64,9 @@ export interface Collection<N>
   isOfType(type: types.Type<any>): boolean;
 }
 
-export type registerMethods = (methods: object, type?: types.Type<any>) => void;
+export type registerMethods = (
+  methods: Record<string, Function>,
+  type?: types.Type<any>
+) => void;
 export type hasConflictingRegistration = (...args: any[]) => any;
 export type setDefaultCollectionType = (...args: any[]) => any;

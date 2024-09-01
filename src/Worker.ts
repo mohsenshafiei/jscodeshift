@@ -9,7 +9,7 @@ import { EventEmitter } from "events";
 import async from "neo-async";
 import fs from "graceful-fs";
 import writeFileAtomic from "write-file-atomic";
-import { DEFAULT_EXTENSIONS } from "@babel/core";
+import { DEFAULT_EXTENSIONS, PluginItem } from "@babel/core";
 import getParser from "./getParser";
 import jscodeshift from "./core";
 import { Options, Parser } from "./types/core";
@@ -22,40 +22,43 @@ import nullishCoalescingOperator from "@babel/plugin-transform-nullish-coalescin
 import optionalChaining from "@babel/plugin-transform-optional-chaining";
 import modulesCommonjs from "@babel/plugin-transform-modules-commonjs";
 import privateMethods from "@babel/plugin-transform-private-methods";
+import * as WorkerTypes from "./types/Worker";
 
 class CustomEmitter extends EventEmitter {
-  send(data: any) {
+  send(data: WorkerTypes.Data) {
     // Custom logic for send
     this.emit("message", data);
   }
 }
 
-let emitter: CustomEmitter | undefined;
+let emitter: CustomEmitter;
 let finish: () => void;
-let notify: (data: any) => void;
+let notify: (data: WorkerTypes.Data) => void;
 let transform: Function;
 let parserFromTransform: Function | string | undefined;
 
-let worker: any;
+let worker: (args: string[]) => CustomEmitter = () => {
+  throw new Error("Worker function is not assigned");
+};
 
 if (module.parent) {
   emitter = new CustomEmitter();
-  emitter.send = (data: any) => {
+  emitter.send = (data: WorkerTypes.Data) => {
     run(data);
   };
   finish = () => {
     emitter?.emit("disconnect");
   };
-  notify = (data: any) => {
+  notify = (data: WorkerTypes.Data) => {
     emitter?.emit("message", data);
   };
-  worker = (args: any[]) => {
+  worker = (args: string[]) => {
     setup(args[0], args[1]);
     return emitter;
   };
 } else {
   finish = () => setImmediate(() => process.disconnect?.());
-  notify = (data: any) => {
+  notify = (data: WorkerTypes.Data) => {
     process.send && process.send(data);
   };
   process.on("message", (data) => {
@@ -72,9 +75,9 @@ function prepareJscodeshift(options: Options) {
   return jscodeshift.withParser(parser as string | Parser);
 }
 
-async function setup(tr: any, babel: any) {
+async function setup(tr: string, babel: string) {
   if (babel === "babel") {
-    const presets: any[] = [];
+    const presets: PluginItem[] = [];
     if (presetEnv) {
       presets.push([presetEnv, { targets: { node: true } }]);
     }
@@ -115,18 +118,18 @@ function free() {
   notify({ action: "free" });
 }
 
-function updateStatus(status: any, file: any, msg?: string): void {
+function updateStatus(status: string, file: string, msg?: string): void {
   msg = msg ? file + " " + msg : file;
   notify({ action: "status", status, msg });
 }
 
-function report(file: any, msg: any): void {
+function report(file: string, msg: string): void {
   notify({ action: "report", file, msg });
 }
 
 function empty() {}
 
-function stats(name: any, quantity: any): void {
+function stats(name: string, quantity: number): void {
   quantity = typeof quantity !== "number" ? 1 : quantity;
   notify({ action: "update", name, quantity });
 }
@@ -146,7 +149,7 @@ function trimStackTrace(trace: string | undefined): string {
   return result.join("\n");
 }
 
-function run(data: any): void {
+function run<T>(data: WorkerTypes.Data): void {
   const files = data.files;
   const options = data.options || {};
   if (!files.length) {
@@ -176,7 +179,7 @@ function run(data: any): void {
                 j: jscodeshiftInstance,
                 jscodeshift: jscodeshiftInstance,
                 stats: options.dry ? stats : empty,
-                report: (msg: any) => report(file, msg),
+                report: (msg: string) => report(file, msg),
               },
               options
             );
@@ -201,21 +204,21 @@ function run(data: any): void {
               updateStatus("ok", file);
               callback();
             }
-          } catch (err: any) {
+          } catch (err) {
             updateStatus(
               "error",
               file,
               "Transformation error (" +
-                err.message.replace(/\n/g, " ") +
+                (err as Error).message.replace(/\n/g, " ") +
                 ")\n" +
-                trimStackTrace(err.stack)
+                trimStackTrace((err as Error).stack)
             );
             callback();
           }
         }
       );
     },
-    (err: any) => {
+    (err) => {
       if (err) {
         updateStatus("error", "", "This should never be shown!");
       }

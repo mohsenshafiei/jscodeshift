@@ -35,7 +35,7 @@ declare namespace core {
     (name: string, quantity?: number): void;
   }
 
-  type ASTPath<N = ASTNode> = nodePath.NodePath<N, N>;
+  export type ASTPath<N = ASTNode> = nodePath.NodePath<N, N>;
 
   interface Core {
     (source: string, options?: Options): Collection.Collection<any>;

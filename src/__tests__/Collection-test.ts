@@ -161,7 +161,7 @@ describe("Collection API", function () {
 
     describe("hasConflictingRegistration", function () {
       function register(methodName: any, type: any) {
-        const methods: any = {};
+        const methods: Record<string, Function> = {};
         methods[methodName] = function () {};
         if (!types[type]) {
           throw new Error(type + " is not a valid type");
@@ -243,7 +243,7 @@ describe("Collection API", function () {
 
       it("returns true if at least one element passes the test", function () {
         const result = Collection.fromNodes(nodes).some(
-          (_: any, i: any) => i === 1
+          (_: any, i: number) => i === 1
         );
         expect(result).toBe(true);
       });
@@ -270,7 +270,7 @@ describe("Collection API", function () {
 
       it("returns false if at least one element does not pass the test", function () {
         const result = Collection.fromNodes(nodes).every(
-          (_: any, i: any) => i === 1
+          (_: any, i: number) => i === 1
         );
         expect(result).toBe(false);
       });
@@ -279,7 +279,9 @@ describe("Collection API", function () {
     describe("map", function () {
       it("returns a new collection with mapped values", function () {
         const root = Collection.fromNodes(nodes);
-        const mapped = root.map((_: any, i: any) => new NodePath(nodes[+!i]));
+        const mapped = root.map(
+          (_: any, i: number) => new NodePath(nodes[+!i])
+        );
 
         expect(root).not.toBe(mapped);
         expect(mapped.length).toBe(2);

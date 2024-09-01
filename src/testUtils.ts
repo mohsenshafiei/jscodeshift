@@ -23,7 +23,7 @@ function isTransformModule(
 
 export function applyTransform(
   module: any,
-  options: any,
+  options: Options | null,
   input: any,
   testOptions = {}
 ) {
@@ -83,7 +83,7 @@ export function runInlineTest(
   },
 
   expectedOutput: string,
-  options?: Options | null,
+  options: Options | null,
   testOptions?: TestOptions
 ) {
   const output = applyTransform(module, options, input, testOptions);
@@ -123,7 +123,7 @@ function extensionForParser(parser: any) {
 export async function runTest(
   dirName: string,
   transformName: string,
-  options?: Options | null,
+  options: Options | null,
   testFilePrefix?: string,
   testOptions?: TestOptions
 ) {
@@ -165,7 +165,7 @@ export async function runTest(
 export function defineTest(
   dirName: string,
   transformName: string,
-  options?: Options | null,
+  options: Options | null,
   testFilePrefix?: string,
   testOptions?: TestOptions
 ) {

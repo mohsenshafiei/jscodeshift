@@ -8,7 +8,9 @@
 /**
  * This replicates lodash's once functionality for our purposes.
  */
-export function once<T extends (...args: any[]) => any>(func: T): T {
+export function once<T extends (...args: string[]) => ReturnType<T>>(
+  func: T
+): T {
   let called = false;
   let result: ReturnType<T>;
   return function (this: never, ...args: Parameters<T>): ReturnType<T> {

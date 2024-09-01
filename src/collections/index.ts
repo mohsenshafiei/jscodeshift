@@ -9,5 +9,16 @@ import * as Node from "./Node";
 import * as JSXElement from "./JSXElement";
 import * as VariableDeclarator from "./VariableDeclarator";
 import * as ImportDeclaration from "./ImportDeclaration";
+interface CollectionModule {
+  register: () => void;
+}
 
-export default { Node, JSXElement, VariableDeclarator, ImportDeclaration };
+// Define the collections object with proper typing
+const collections: { [key: string]: CollectionModule } = {
+  Node,
+  JSXElement,
+  VariableDeclarator,
+  ImportDeclaration,
+};
+
+export default collections;

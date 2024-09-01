@@ -149,14 +149,14 @@ function dirFiles(
 }
 
 function getAllFiles(
-  paths: string[],
+  paths: (string | number)[],
   filter: (file: string) => boolean
 ): Promise<string[]> {
   return Promise.all(
     paths.map(
       (file) =>
         new Promise<string[]>((resolve) => {
-          fs.lstat(file, (err, stat) => {
+          fs.lstat(file as fs.PathLike, (err, stat) => {
             if (err) {
               process.stderr.write(
                 "Skipping path " + file + " which does not exist. \n"
@@ -166,12 +166,12 @@ function getAllFiles(
             }
 
             if (stat.isDirectory()) {
-              dirFiles(file, (list) => resolve(list.filter(filter)));
-            } else if (!filter(file) || ignores.shouldIgnore(file)) {
+              dirFiles(file as string, (list) => resolve(list.filter(filter)));
+            } else if (!filter(file as string) || ignores.shouldIgnore(file)) {
               // ignoring the file
               resolve([]);
             } else {
-              resolve([file]);
+              resolve([file as string]);
             }
           });
         })
@@ -181,7 +181,7 @@ function getAllFiles(
 
 export default function run(
   transformFile: string,
-  paths: string[],
+  paths: (string | number)[],
   options: CoreTypes.Options
 ) {
   let usedRemoteScript = false;

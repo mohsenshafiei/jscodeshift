@@ -15,7 +15,7 @@ import once from "../utils/once";
 import * as recast from "recast";
 import { Filters, JSCodeshift } from "../types/core";
 
-import * as CollectionType from "../types/Collection";
+import * as CollectionTypes from "../types/Collection";
 import * as JSXElementType from "../types/collections/JSXElement";
 const requiresModule = require("./VariableDeclarator").filters.requiresModule;
 
@@ -38,7 +38,7 @@ const globalMethods = {
   findJSXElements: function (
     this: JSCodeshift,
     name: string
-  ): CollectionType.Collection<JSXElementType.JSXElement> {
+  ): CollectionTypes.Collection<JSXElementType.JSXElement> {
     const nameFilter = name && { openingElement: { name: { name: name } } };
     return this.find(JSXElement, nameFilter);
   },
@@ -55,7 +55,7 @@ const globalMethods = {
   findJSXElementsByModuleName: function (
     this: JSCodeshift,
     moduleName: string
-  ): CollectionType.Collection<JSXElementType.JSXElement> {
+  ): CollectionTypes.Collection<JSXElementType.JSXElement> {
     assert.ok(
       moduleName && typeof moduleName === "string",
       "findJSXElementsByModuleName(...) needs a name to look for"

@@ -20,7 +20,7 @@ options.plugins = ["jsx"].concat(baseOptions.plugins as any);
  */
 export default function () {
   return {
-    parse(code: any) {
+    parse(code: string) {
       return babylon.parse(code, options);
     },
   };

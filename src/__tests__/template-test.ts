@@ -7,17 +7,22 @@
 
 "use strict";
 
-import { template } from "@babel/core";
 import core from "../core";
-import { Collection, JSCodeshift } from "../types/core";
+import { JSCodeshift } from "../types/core";
 import flowParser from "../../parser/flow";
 import temp from "../template";
 
+import * as CoreTypes from "../../src/types/core";
+import recast from "recast";
+
 describe("Templates", () => {
-  let statements: any;
-  let statement: any;
-  let expression: any;
-  let asyncExpression: any;
+  let statements: <T>(args: TemplateStringsArray, ...values: T[]) => string;
+  let statement: <T>(args: TemplateStringsArray, ...values: T[]) => string;
+  let expression: <T>(args: TemplateStringsArray, ...values: T[]) => string;
+  let asyncExpression: <T>(
+    args: TemplateStringsArray,
+    ...values: T[]
+  ) => string;
   let jscodeshift: JSCodeshift;
 
   beforeEach(() => {
@@ -45,7 +50,9 @@ if(alert(bar)) {
     expect(
       jscodeshift(input)
         .find("Identifier", { name: "bar" })
-        .replaceWith((path: any) => expression`alert(${path.node})`)
+        .replaceWith(
+          (path: CoreTypes.ASTPath<any>) => expression`alert(${path.node})`
+        )
         .toSource()
     ).toEqual(expected);
   });
@@ -67,7 +74,7 @@ while (i < 10) {
       jscodeshift(input)
         .find("ForStatement")
         .replaceWith(
-          (p: any) => statements`
+          (p: CoreTypes.ASTPath<any>) => statements`
             ${p.node.init};
             while (${p.node.test}) {
               ${p.node.body.body}
@@ -101,7 +108,6 @@ while (i < 10) {
 
     expect(
       jscodeshift(input)
-        // @ts-ignore
         .find("VariableDeclaration")
         .replaceWith(classDecl)
         .toSource()
@@ -131,10 +137,10 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith(
-            (p: any) => expression`function foo(${p.node.elements}, c) {}`
+            (p: CoreTypes.ASTPath<any>) =>
+              expression`function foo(${p.node.elements}, c) {}`
           )
           .toSource()
       ).toEqual(expected);
@@ -143,10 +149,10 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("ArrayExpression")
           .replaceWith(
-            (p: any) => expression`function(${p.node.elements}, c) {}`
+            (p: CoreTypes.ASTPath<any>) =>
+              expression`function(${p.node.elements}, c) {}`
           )
           .toSource()
       ).toEqual(expected);
@@ -155,9 +161,10 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("ArrayExpression")
-          .replaceWith((p: any) => expression`${p.node.elements} => {}`)
+          .replaceWith(
+            (p: CoreTypes.ASTPath<any>) => expression`${p.node.elements} => {}`
+          )
           .toSource()
       ).toEqual(expected);
 
@@ -165,9 +172,11 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("ArrayExpression")
-          .replaceWith((p: any) => expression`(${p.node.elements}, c) => {}`)
+          .replaceWith(
+            (p: CoreTypes.ASTPath<any>) =>
+              expression`(${p.node.elements}, c) => {}`
+          )
           .toSource()
       ).toEqual(expected);
     });
@@ -177,12 +186,11 @@ while (i < 10) {
       let expected = "var foo, a, b;";
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("VariableDeclaration")
           // Need to use a block here because the arrow doesn't seem to be
           // compiled with a line break after the return statement. Can't repro
           // outside here though
-          .replaceWith((p: any) => {
+          .replaceWith((p: CoreTypes.ASTPath<any>) => {
             const node = p.node.declarations[0];
             return statement`var ${node.id}, ${node.init.elements};`;
           })
@@ -195,9 +203,10 @@ while (i < 10) {
       let expected = "var foo = [a, b, c];";
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("ArrayExpression")
-          .replaceWith((p: any) => expression`[${p.node.elements}, c]`)
+          .replaceWith(
+            (p: CoreTypes.ASTPath<any>) => expression`[${p.node.elements}, c]`
+          )
           .toSource()
       ).toEqual(expected);
     });
@@ -207,9 +216,11 @@ while (i < 10) {
       let expected = /var foo = \{\s*a,\s*b,\s*c: 42\s*};/;
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("ObjectExpression")
-          .replaceWith((p: any) => expression`{${p.node.properties}, c: 42}`)
+          .replaceWith(
+            (p: CoreTypes.ASTPath<any>) =>
+              expression`{${p.node.properties}, c: 42}`
+          )
           .toSource()
       ).toMatch(expected);
     });
@@ -220,9 +231,11 @@ while (i < 10) {
 
       expect(
         jscodeshift(input)
-          // @ts-ignore
           .find("ArrayExpression")
-          .replaceWith((p: any) => expression`bar(${p.node.elements}, c)`)
+          .replaceWith(
+            (p: CoreTypes.ASTPath<any>) =>
+              expression`bar(${p.node.elements}, c)`
+          )
           .toSource()
       ).toEqual(expected);
     });

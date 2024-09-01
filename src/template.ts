@@ -98,7 +98,7 @@ function getVistor(varNames: any, nodes: any) {
 
 function replaceNodes(
   src: string,
-  varNames: any,
+  varNames: string[],
   nodes: CoreTypes.ASTNode,
   parser: CoreTypes.Parser
 ) {
@@ -116,9 +116,9 @@ export function withParser(parser: CoreTypes.Parser): Template {
   function statements(template: any /*, ...nodes*/) {
     template = Array.from(template);
     const nodes: any = Array.from(arguments).slice(1);
-    const varNames: any = nodes.map(() => getUniqueVarName());
-    const src: any = template.reduce(
-      (result: any, elem: any, i: number) => result + varNames[i - 1] + elem
+    const varNames: string[] = nodes.map(() => getUniqueVarName());
+    const src: string = template.reduce(
+      (result: string, elem: any, i: number) => result + varNames[i - 1] + elem
     );
 
     return replaceNodes(src, varNames, nodes, parser).program.body;

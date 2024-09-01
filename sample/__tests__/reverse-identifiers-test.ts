@@ -23,7 +23,7 @@ import {
 } from "../../src/testUtils";
 import transformer from "../reverse-identifiers";
 
-defineTest(__dirname, "reverse-identifiers");
+defineTest(__dirname, "reverse-identifiers", null);
 
 defineTest(
   __dirname,

@@ -42,7 +42,7 @@ const globalMethods = {
   findVariableDeclarators: function (
     this: JSCodeshift,
     name: string
-  ): Collection.ICollection {
+  ): Collection.CollectionType {
     const filter = name ? { id: { name: name } } : null;
     return this.find(VariableDeclarator, filter);
   },
@@ -94,14 +94,14 @@ const transformMethods = {
   renameTo: function (
     this: JSCodeshift,
     newName: string
-  ): Collection.ICollection {
+  ): Collection.CollectionType {
     return this.forEach(function (this: JSCodeshift, path: NodePath) {
       const node = path.value;
       const oldName = node.id.name;
       const rootScope = path.scope;
       const rootPath = rootScope.path;
       Collection.fromPaths([rootPath])
-        // @ts-ignore
+        //@ts-ignore
         .find(types.Identifier, { name: oldName })
         .filter(function (path: NodePath) {
           // ignore non-variables

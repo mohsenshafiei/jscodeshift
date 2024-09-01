@@ -6,13 +6,13 @@ import * as recast from "recast";
 import * as template from "./template";
 import { Options } from "./types/core";
 import * as CoreTypes from "./types/core";
+import * as types from "ast-types/lib/types";
 
 const Node = recast.types.namedTypes.Node;
 const NodePath = recast.types.NodePath;
 
 // Register all built-in collections
 for (const name in collections) {
-  // @ts-ignore
   collections[name].register();
 }
 
@@ -78,10 +78,10 @@ function match(path: any, filter: any): boolean {
 
 const plugins: CoreTypes.Plugin[] = [];
 
-function use(plugin: any): void {
+function use(plugin: CoreTypes.Plugin): void {
   if (plugins.indexOf(plugin) === -1) {
     plugins.push(plugin);
-    plugin(core);
+    plugin(core as CoreTypes.Core);
   }
 }
 
@@ -105,7 +105,9 @@ function withParser(parser: string | CoreTypes.Parser): CoreTypes.JSCodeshift {
 function enrichCore(
   coreInstance: CoreTypes.JSCodeshift,
   parser?: CoreTypes.Parser
-): CoreTypes.JSCodeshift {
+): CoreTypes.JSCodeshift & {
+  registerMethods: (methods: Record<string, Function>, type?: any) => void;
+} {
   Object.assign(coreInstance, recast.types.namedTypes);
   Object.assign(coreInstance, recast.types.builders);
 

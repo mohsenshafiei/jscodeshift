@@ -29,7 +29,7 @@ export interface TraversalMethods {
   ): Collection.Collection<T>;
 
   getVariableDeclarators(
-    nameGetter: (...args: any[]) => any
+    nameGetter: (...args: string[]) => any
   ): Collection.Collection<astTypes.namedTypes.VariableDeclarator>;
 }
 

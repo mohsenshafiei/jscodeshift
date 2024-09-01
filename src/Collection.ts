@@ -13,8 +13,8 @@ import * as recast from "recast";
 import union from "./utils/union";
 
 import * as ASTTypes from "ast-types/lib/types";
-import * as CollectionType from "./types/Collection";
-import { JSCodeshift, Options } from "./types/core";
+import * as CollectionTypes from "./types/Collection";
+import { ASTNode, JSCodeshift, Options } from "./types/core";
 
 const astTypes = recast.types;
 var types = astTypes.namedTypes;
@@ -40,13 +40,13 @@ class Collection<N> {
    * @return {Collection}
    */
 
-  public __paths: Array<CollectionType.ASTPath<N>>;
-  private _parent: any;
+  public __paths: Array<CollectionTypes.ASTPath<N>>;
+  private _parent: CollectionTypes.Collection<any>;
   private _types: Array<ASTTypes.Type<any>> | undefined;
 
   constructor(
-    paths: Array<CollectionType.ASTPath<N>>,
-    parent: CollectionType.Collection<any>,
+    paths: Array<CollectionTypes.ASTPath<N>>,
+    parent: CollectionTypes.Collection<any>,
     types?: Array<ASTTypes.Type<any>>
   ) {
     assert.ok(Array.isArray(paths), "Collection is passed an array");
@@ -73,10 +73,10 @@ class Collection<N> {
    */
   filter<S extends N>(
     callback: (
-      path: CollectionType.ASTPath<N>,
+      path: CollectionTypes.ASTPath<N>,
       i: number,
-      paths: Array<CollectionType.ASTPath<N>>
-    ) => path is CollectionType.ASTPath<S>
+      paths: Array<CollectionTypes.ASTPath<N>>
+    ) => path is CollectionTypes.ASTPath<S>
   ) {
     // @ts-ignore
     return new this.constructor(this.__paths.filter(callback), this);
@@ -90,16 +90,16 @@ class Collection<N> {
    */
   forEach(
     callback: (
-      path: CollectionType.ASTPath<N>,
+      path: CollectionTypes.ASTPath<N>,
       i: number,
-      paths: Array<CollectionType.ASTPath<N>>
+      paths: Array<CollectionTypes.ASTPath<N>>
     ) => void
   ) {
     this.__paths.forEach(
       (
-        path: CollectionType.ASTPath<N>,
+        path: CollectionTypes.ASTPath<N>,
         i: number,
-        paths: Array<CollectionType.ASTPath<N>>
+        paths: Array<CollectionTypes.ASTPath<N>>
       ) => callback.call(path, path, i, paths)
     );
     return this;
@@ -113,16 +113,16 @@ class Collection<N> {
    */
   some(
     callback: (
-      path: CollectionType.ASTPath<N>,
+      path: CollectionTypes.ASTPath<N>,
       i: number,
-      paths: Array<CollectionType.ASTPath<N>>
+      paths: Array<CollectionTypes.ASTPath<N>>
     ) => boolean
   ) {
     return this.__paths.some(
       (
-        path: CollectionType.ASTPath<N>,
+        path: CollectionTypes.ASTPath<N>,
         i: number,
-        paths: Array<CollectionType.ASTPath<N>>
+        paths: Array<CollectionTypes.ASTPath<N>>
       ) => callback.call(path, path, i, paths)
     );
   }
@@ -135,9 +135,9 @@ class Collection<N> {
    */
   every(
     callback: (
-      path: CollectionType.ASTPath<N>,
+      path: CollectionTypes.ASTPath<N>,
       i: number,
-      paths: Array<CollectionType.ASTPath<N>>
+      paths: Array<CollectionTypes.ASTPath<N>>
     ) => boolean
   ) {
     return this.__paths.every((path, i, paths) =>
@@ -160,22 +160,22 @@ class Collection<N> {
    */
   map<T = ASTTypes.ASTNode>(
     callback: (
-      path: CollectionType.ASTPath<N>,
+      path: CollectionTypes.ASTPath<N>,
       i: number,
-      paths: Array<CollectionType.ASTPath<N>>
+      paths: Array<CollectionTypes.ASTPath<N>>
     ) =>
-      | CollectionType.ASTPath<T>
-      | Array<CollectionType.ASTPath<T>>
+      | CollectionTypes.ASTPath<T>
+      | Array<CollectionTypes.ASTPath<T>>
       | null
       | undefined,
     type: ASTTypes.Type<any>
   ) {
-    const paths: Array<CollectionType.ASTPath<T>> = [];
-    this.forEach(function (path: CollectionType.ASTPath<N>) {
+    const paths: Array<CollectionTypes.ASTPath<T>> = [];
+    this.forEach(function (path: CollectionTypes.ASTPath<N>) {
       /*jshint eqnull:true*/
       let result:
-        | CollectionType.ASTPath<T>
-        | Array<CollectionType.ASTPath<T>>
+        | CollectionTypes.ASTPath<T>
+        | Array<CollectionTypes.ASTPath<T>>
         | null
         // @ts-ignore
         | undefined = callback.apply(path, arguments);
@@ -219,11 +219,11 @@ class Collection<N> {
     return this.__paths.map((p) => p.value);
   }
 
-  paths(): Array<CollectionType.ASTPath<N>> {
+  paths(): Array<CollectionTypes.ASTPath<N>> {
     return this.__paths;
   }
 
-  getAST(): Array<CollectionType.ASTPath<any>> {
+  getAST(): Array<CollectionTypes.ASTPath<any>> {
     if (this._parent) {
       return this._parent.getAST();
     }
@@ -238,7 +238,7 @@ class Collection<N> {
       return recast.print(this.__paths[0], options).code;
     } else {
       return this.__paths.map(
-        (p: CollectionType.ASTPath<N>) => recast.print(p as any, options).code
+        (p: recast.types.ASTNode) => recast.print(p, options).code
       );
     }
   }
@@ -285,7 +285,7 @@ class Collection<N> {
    *
    * @return {Array<string>}
    */
-  getTypes(): ASTTypes.Type<any>[] | undefined {
+  getTypes<T>(): ASTTypes.Type<T>[] | undefined {
     return this._types;
   }
 
@@ -295,7 +295,7 @@ class Collection<N> {
    * @param {Type} type
    * @return {boolean}
    */
-  isOfType(type: ASTTypes.Type<any>): boolean | undefined {
+  isOfType<T>(type: ASTTypes.Type<T>): boolean | undefined {
     return (
       !!type && this._types && this._types.indexOf(type.toString() as any) > -1
     );
@@ -308,7 +308,7 @@ class Collection<N> {
  * @param {Array} paths An array of paths.
  * @return {Type} type An AST type
  */
-function _inferTypes<N>(paths: Array<CollectionType.ASTPath<N>>) {
+function _inferTypes<N>(paths: Array<CollectionTypes.ASTPath<N>>) {
   let _types: Array<ASTTypes.Type<any>> = [];
 
   if (paths.length > 0 && Node.check(paths[0].node)) {
@@ -316,7 +316,7 @@ function _inferTypes<N>(paths: Array<CollectionType.ASTPath<N>>) {
     const nodeType = types[paths[0].node.type];
     const sameType =
       paths.length === 1 ||
-      paths.every((path: CollectionType.ASTPath<N>) =>
+      paths.every((path: CollectionTypes.ASTPath<N>) =>
         nodeType.check(path.node)
       );
 
@@ -328,7 +328,7 @@ function _inferTypes<N>(paths: Array<CollectionType.ASTPath<N>>) {
       // try to find a common type
       // @ts-ignore
       _types = intersection(
-        paths.map((path: CollectionType.ASTPath<any>) =>
+        paths.map((path: CollectionTypes.ASTPath<any>) =>
           astTypes.getSupertypeNames(path.node.type)
         )
       );
@@ -338,7 +338,7 @@ function _inferTypes<N>(paths: Array<CollectionType.ASTPath<N>>) {
   return _types;
 }
 
-export type ICollection = typeof Collection;
+export type CollectionType = typeof Collection;
 
 function _toTypeArray(value: any) {
   value = !Array.isArray(value) ? [value] : value;
@@ -383,12 +383,12 @@ function _getSupertypeNames(type: string) {
  * @return {Collection}
  */
 export function fromPaths<N>(
-  paths: Array<CollectionType.ASTPath<N>>,
+  paths: Array<CollectionTypes.ASTPath<N>>,
   parent?: any,
   type?: any
 ) {
   assert.ok(
-    paths.every((n: CollectionType.ASTPath<N>) => n instanceof NodePath),
+    paths.every((n: CollectionTypes.ASTPath<N>) => n instanceof NodePath),
     "Every element in the array should be a NodePath"
   );
   return new Collection(paths, parent, type);
@@ -406,7 +406,11 @@ export function fromPaths<N>(
  * @param {Type} type An AST type
  * @return {Collection}
  */
-export function fromNodes(nodes: any, parent: any, type: any) {
+export function fromNodes<N>(
+  nodes: Array<ASTNode>,
+  parent: CollectionTypes.Collection<N>,
+  type: any
+) {
   assert.ok(
     nodes.every((n: any) => Node.check(n)),
     "Every element in the array should be a Node"
@@ -418,7 +422,7 @@ export function fromNodes(nodes: any, parent: any, type: any) {
   );
 }
 
-const CPt: any = Collection.prototype;
+const CPt: Record<string, any> = Collection.prototype;
 
 /**
  * This function adds the provided methods to the prototype of the corresponding
@@ -428,7 +432,7 @@ const CPt: any = Collection.prototype;
  * @param {Object} methods Methods to add to the prototype
  * @param {Type=} type Optional type to add the methods to
  */
-export function registerMethods(methods: any, type?: any) {
+export function registerMethods(methods: Record<string, Function>, type?: any) {
   for (const methodName in methods) {
     if (!methods.hasOwnProperty(methodName)) {
       return;
@@ -463,30 +467,28 @@ export function registerMethods(methods: any, type?: any) {
       }
       var registrations = CPt[methodName].typedRegistrations;
       registrations[type] = methods[methodName];
-      astTypes.getSupertypeNames(type).forEach(function (name: any) {
+      astTypes.getSupertypeNames(type).forEach(function (name: string) {
         registrations[name] = false;
       });
     }
   }
 }
 
-function installTypedMethod(methodName: any) {
+function installTypedMethod(methodName: string) {
   if (CPt.hasOwnProperty(methodName)) {
     throw new Error(
       `Internal Error: "${methodName}" method is already installed`
     );
   }
 
-  const registrations: any = {};
+  const registrations: Record<string, Function> = {};
 
-  function typedMethod() {
+  function typedMethod(this: CollectionTypes.Collection<any>) {
     const types = Object.keys(registrations);
 
     for (let i = 0; i < types.length; i++) {
       const currentType = types[i];
-      // @ts-ignore
-      if (registrations[currentType] && this.isOfType(currentType)) {
-        // @ts-ignore
+      if (registrations[currentType] && this.isOfType(currentType as any)) {
         return registrations[currentType].apply(this, arguments);
       }
     }
@@ -503,7 +505,7 @@ function installTypedMethod(methodName: any) {
   CPt[methodName] = typedMethod;
 }
 
-export function hasConflictingRegistration(methodName: any, type: any) {
+export function hasConflictingRegistration(methodName: string, type: any) {
   if (!type) {
     return CPt.hasOwnProperty(methodName);
   }
